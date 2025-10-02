@@ -1,0 +1,13 @@
+SET standard_conforming_strings = ON;
+DROP TABLE IF EXISTS "public"."punto_transporte" CASCADE;
+BEGIN;
+CREATE TABLE "public"."punto_transporte"();
+ALTER TABLE "public"."punto_transporte" ADD COLUMN "ogc_fid" SERIAL CONSTRAINT "punto_transporte_pk" PRIMARY KEY;
+SELECT AddGeometryColumn('public','punto_transporte','wkb_geometry',4326,'POINT',2);
+ALTER TABLE "public"."punto_transporte" ADD COLUMN "osm_id" VARCHAR;
+ALTER TABLE "public"."punto_transporte" ADD COLUMN "code" NUMERIC(10,0);
+ALTER TABLE "public"."punto_transporte" ADD COLUMN "fclass" VARCHAR;
+ALTER TABLE "public"."punto_transporte" ADD COLUMN "name" VARCHAR;
+INSERT INTO "public"."punto_transporte" ("wkb_geometry", "osm_id", "code", "fclass", "name") VALUES ('0101000020E610000081261D401A5C5BC01A0923AC7C273BC0', '12626555959', 5661, 'ferry_terminal', 'Cruise Berth for Tender');
+CREATE INDEX "punto_transporte_wkb_geometry_geom_idx" ON "public"."punto_transporte" USING GIST ("wkb_geometry");
+COMMIT;

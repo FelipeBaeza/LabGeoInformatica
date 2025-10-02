@@ -1,0 +1,14 @@
+SET standard_conforming_strings = ON;
+DROP TABLE IF EXISTS "public"."punto_religioso" CASCADE;
+BEGIN;
+CREATE TABLE "public"."punto_religioso"();
+ALTER TABLE "public"."punto_religioso" ADD COLUMN "ogc_fid" SERIAL CONSTRAINT "punto_religioso_pk" PRIMARY KEY;
+SELECT AddGeometryColumn('public','punto_religioso','wkb_geometry',4326,'POINT',2);
+ALTER TABLE "public"."punto_religioso" ADD COLUMN "osm_id" VARCHAR;
+ALTER TABLE "public"."punto_religioso" ADD COLUMN "code" NUMERIC(10,0);
+ALTER TABLE "public"."punto_religioso" ADD COLUMN "fclass" VARCHAR;
+ALTER TABLE "public"."punto_religioso" ADD COLUMN "name" VARCHAR;
+INSERT INTO "public"."punto_religioso" ("wkb_geometry", "osm_id", "code", "fclass", "name") VALUES ('0101000020E610000064C0A3D7305A5BC0503D2D9A291A3BC0', '4939036626', 3100, 'christian', NULL);
+INSERT INTO "public"."punto_religioso" ("wkb_geometry", "osm_id", "code", "fclass", "name") VALUES ('0101000020E61000003546EBA86A5A5BC051AD742D10293BC0', '5195243921', 3100, 'christian', 'Salon del Reine de Testigos Jehová');
+CREATE INDEX "punto_religioso_wkb_geometry_geom_idx" ON "public"."punto_religioso" USING GIST ("wkb_geometry");
+COMMIT;
