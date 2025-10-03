@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+env/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datos (muy pesados para Git)
+data/raw/*.tif
+data/raw/*.shp
+data/raw/*.gpkg
+data/processed/*.tif
+data/processed/*.gpkg
+
+# Modelos entrenados
+*.pkl
+*.h5
+*.pt
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/

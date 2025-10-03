@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Base de datos espacial PostGIS
+  postgis:
+    image: postgis/postgis:15-3.3
+    container_name: geo_postgis
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgis/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./data:/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Jupyter Lab para análisis
+  jupyter:
+    build: ./docker/jupyter
+    container_name: geo_jupyter
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./data:/home/jovyan/data
+      - ./scripts:/home/jovyan/scripts
+      - ./outputs:/home/jovyan/outputs
+    ports:
+      - "8888:8888"
+    depends_on:
+      postgis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Aplicación web Streamlit
+  streamlit:
+    build: ./docker/web
+    container_name: geo_streamlit
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./app:/app
+      - ./data:/data
+      - ./outputs:/outputs
+    ports:
+      - "8501:8501"
+    depends_on:
+      postgis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
