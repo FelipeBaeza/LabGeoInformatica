@@ -9,6 +9,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_INITDB_ARGS=--auth-host=trust --auth-local=trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgis/init.sql:/docker-entrypoint-initdb.d/init.sql

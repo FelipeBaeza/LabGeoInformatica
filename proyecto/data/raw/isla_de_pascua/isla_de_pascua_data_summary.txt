@@ -1,0 +1,28 @@
+
+============================================================
+REPORTE DE DESCARGA DE DATOS GEOESPACIALES
+============================================================
+
+Comuna: Isla de Pascua
+Año: 2024
+Fecha de descarga: 2025-11-28 23:27:19
+
+DATOS DESCARGADOS
+------------------------------------------------------------
+
+[OSM]
+  - boundary: 1 registros
+  - streets: 4139 registros
+  - buildings: 4045 registros
+  - amenities: 241 registros
+  - green_areas: 12 registros
+  - transport: 1 registros
+
+------------------------------------------------------------
+PRÓXIMOS PASOS
+------------------------------------------------------------
+1. Cargar datos en PostGIS usando el script load_to_postgis.py
+2. Validar calidad de datos
+3. Comenzar análisis exploratorio
+
+============================================================
