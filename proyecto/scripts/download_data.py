@@ -48,7 +48,7 @@ def download_osm_data(comuna: str, output_dir: Path) -> dict:
     Returns:
         dict: Diccionario con los GeoDataFrames descargados
     """
-    print(f"\n📥 Descargando datos OSM para {comuna}...")
+    print(f"\nDescargando datos OSM para {comuna}...")
     
     # Definir el lugar de búsqueda - intentar diferentes formatos
     place_name = f"{comuna}, Chile"
@@ -126,7 +126,7 @@ def download_ine_data(comuna: str, year: int, output_dir: Path) -> dict:
     Returns:
         dict: Diccionario con los datos descargados
     """
-    print(f"\n📥 Descargando datos INE para {comuna} ({year})...")
+    print(f"\n Descargando datos INE para {comuna} ({year})...")
     
     # Nota: En un caso real, aquí se conectaría a la API del INE
     # o se descargarían los datos desde su portal
@@ -177,7 +177,7 @@ def download_sentinel_data(comuna: str, year: int, output_dir: Path) -> dict:
     Returns:
         dict: Diccionario con los datos descargados
     """
-    print(f"\n📥 Preparando descarga Sentinel para {comuna} ({year})...")
+    print(f"\n Preparando descarga Sentinel para {comuna} ({year})...")
     
     print("  ⚠ Las imágenes Sentinel requieren:")
     print("    1. Cuenta en Copernicus: https://scihub.copernicus.eu/dhus/#/self-registration")
@@ -218,7 +218,7 @@ Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 def create_summary_report(comuna: str, year: int, data: dict, output_dir: Path):
     """Crear reporte resumen de los datos descargados."""
-    print("\n📊 Generando reporte de datos...")
+    print("\n Generando reporte de datos...")
     
     report_path = output_dir / f"{comuna.lower().replace(' ', '_')}_data_summary.txt"
     

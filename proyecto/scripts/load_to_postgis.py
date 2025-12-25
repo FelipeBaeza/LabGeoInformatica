@@ -143,7 +143,7 @@ def load_all_geojson_from_dir(source_dir: Path, engine, schema: str = 'geoanalis
         print(f"⚠ No se encontraron archivos GeoJSON en {source_dir}")
         return
     
-    print(f"\n📂 Cargando {len(geojson_files)} archivos desde {source_dir}")
+    print(f"\n Cargando {len(geojson_files)} archivos desde {source_dir}")
     
     loaded = 0
     failed = 0
@@ -157,7 +157,7 @@ def load_all_geojson_from_dir(source_dir: Path, engine, schema: str = 'geoanalis
         else:
             failed += 1
     
-    print(f"\n📊 Resumen: {loaded} cargados, {failed} fallidos")
+    print(f"\n Resumen: {loaded} cargados, {failed} fallidos")
 
 
 def create_spatial_indexes(engine, schema: str = 'geoanalisis'):
@@ -197,7 +197,7 @@ def create_spatial_indexes(engine, schema: str = 'geoanalisis'):
 
 def list_tables(engine, schema: str = 'geoanalisis'):
     """Listar todas las tablas en el schema."""
-    print(f"\n📋 Tablas en schema '{schema}':")
+    print(f"\n Tablas en schema '{schema}':")
     
     try:
         with engine.connect() as conn:
@@ -266,11 +266,11 @@ def main():
     """)
     
     # Conectar a la base de datos
-    print("🔌 Conectando a PostGIS...")
+    print(" Conectando a PostGIS...")
     engine = get_db_engine()
     
     if not test_connection(engine):
-        print("\n❌ No se pudo conectar a la base de datos.")
+        print("\n No se pudo conectar a la base de datos.")
         print("   Verifica que el contenedor Docker esté corriendo:")
         print("   docker-compose up -d postgis")
         sys.exit(1)
@@ -289,11 +289,11 @@ def main():
         # Cargar datos del proyecto principal (../Datos GeoJSON)
         source_dir = BASE_DIR.parent / "Datos GeoJSON"
         if not source_dir.exists():
-            print("❌ Debe especificar --comuna o --source")
+            print(" Debe especificar --comuna o --source")
             sys.exit(1)
     
     if not source_dir.exists():
-        print(f"❌ Directorio no encontrado: {source_dir}")
+        print(f" Directorio no encontrado: {source_dir}")
         sys.exit(1)
     
     # Cargar datos
