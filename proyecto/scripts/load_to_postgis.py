@@ -26,8 +26,8 @@ DATA_RAW_DIR = BASE_DIR / "data" / "raw"
 # Configuración de base de datos (valores por defecto)
 DB_CONFIG = {
     'host': 'localhost',
-    'port': '5432',
-    'database': 'geodb',
+    'port': '55432',
+    'database': 'geodatabase',
     'user': 'geouser',
     'password': 'geopass123'
 }
@@ -43,25 +43,24 @@ try:
                     key, value = line.split('=', 1)
                     key = key.strip()
                     value = value.strip()
-                    if key == 'POSTGRES_HOST':
-                        DB_CONFIG['host'] = value
-                    elif key == 'POSTGRES_PORT':
-                        DB_CONFIG['port'] = value
-                    elif key == 'POSTGRES_DB':
-                        DB_CONFIG['database'] = value
-                    elif key == 'POSTGRES_USER':
-                        DB_CONFIG['user'] = value
-                    elif key == 'POSTGRES_PASSWORD':
-                        DB_CONFIG['password'] = value
+        if key == 'POSTGRES_HOST':
+            DB_CONFIG['host'] = value
+        elif key == 'POSTGRES_PORT':
+            DB_CONFIG['port'] = value
+        elif key == 'POSTGRES_DB':
+            DB_CONFIG['database'] = value
+        elif key == 'POSTGRES_USER':
+            DB_CONFIG['user'] = value
+        elif key == 'POSTGRES_PASSWORD':
+            DB_CONFIG['password'] = value
 except Exception:
     pass  # Usar valores por defecto
 
 
 def get_db_engine():
     """Crear conexión a la base de datos."""
-    # Usar psycopg (v3) en lugar de psycopg2
     connection_string = (
-        f"postgresql+psycopg://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
         f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
     )
     print(f"  Conectando a: {DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}")

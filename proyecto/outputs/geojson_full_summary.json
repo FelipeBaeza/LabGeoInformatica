@@ -1,0 +1,1041 @@
+{
+  "files": {
+    "are_administrativa_poligon.geojson": {
+      "file": "Datos GeoJSON/are_administrativa_poligon.geojson",
+      "num_features": 1,
+      "geometry_types": {
+        "MultiPolygon": 1
+      },
+      "property_key_counts": {
+        "id": 1,
+        "codreg": 1,
+        "codpro": 1,
+        "codcom": 1,
+        "nom_reg": 1,
+        "nom_pro": 1,
+        "nom_com": 1,
+        "shape_leng": 1,
+        "shape_area": 1
+      },
+      "crs": "urn:ogc:def:crs:EPSG::32712",
+      "bbox": [
+        653027.3861000007,
+        6990235.617100001,
+        1062727.7341409018,
+        7059920.598923943
+      ],
+      "samples": [
+        {
+          "id": 1,
+          "codreg": "05",
+          "codpro": "052",
+          "codcom": "05201",
+          "nom_reg": "Región de Valparaíso",
+          "nom_pro": "Isla de Pascua",
+          "nom_com": "Isla de Pascua",
+          "shape_leng": 102400.0,
+          "shape_area": 164100000.0,
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_construcciones.geojson": {
+      "file": "Datos GeoJSON/area_construcciones.geojson",
+      "num_features": 4031,
+      "geometry_types": {
+        "MultiPolygon": 4031
+      },
+      "property_key_counts": {
+        "osm_id": 4031,
+        "code": 4031,
+        "fclass": 4031,
+        "name": 357,
+        "type": 2782
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4436699,
+        -27.1913007,
+        -109.2751149,
+        -27.0778179
+      ],
+      "samples": [
+        {
+          "osm_id": "200131347",
+          "code": 1500,
+          "fclass": "building",
+          "name": "Atavai",
+          "type": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "201459047",
+          "code": 1500,
+          "fclass": "building",
+          "name": "Kaimana Inn",
+          "type": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "206477754",
+          "code": 1500,
+          "fclass": "building",
+          "name": "Biblioteca Municipal",
+          "type": "civic",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_estacionamiento.geojson": {
+      "file": "Datos GeoJSON/area_estacionamiento.geojson",
+      "num_features": 49,
+      "geometry_types": {
+        "MultiPolygon": 49
+      },
+      "property_key_counts": {
+        "osm_id": 49,
+        "code": 49,
+        "fclass": 49,
+        "name": 1
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4433625,
+        -27.1867977,
+        -109.2779344,
+        -27.0713971
+      ],
+      "samples": [
+        {
+          "osm_id": "121962650",
+          "code": 5260,
+          "fclass": "parking",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "207823546",
+          "code": 5260,
+          "fclass": "parking",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "208002899",
+          "code": 5260,
+          "fclass": "parking",
+          "name": "Oroŋo",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_interes.geojson": {
+      "file": "Datos GeoJSON/area_interes.geojson",
+      "num_features": 250,
+      "geometry_types": {
+        "MultiPolygon": 250
+      },
+      "property_key_counts": {
+        "osm_id": 250,
+        "code": 250,
+        "fclass": 250,
+        "name": 182
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4412403,
+        -27.1801588,
+        -109.276374,
+        -27.0735535
+      ],
+      "samples": [
+        {
+          "osm_id": "97778391",
+          "code": 2015,
+          "fclass": "graveyard",
+          "name": "Cementerio Tahai",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "198032063",
+          "code": 2251,
+          "fclass": "sports_centre",
+          "name": "Estadio de Hanga Roa",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "200131347",
+          "code": 2401,
+          "fclass": "hotel",
+          "name": "Atavai",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_naturaleza_playas.geojson": {
+      "file": "Datos GeoJSON/area_naturaleza_playas.geojson",
+      "num_features": 6,
+      "geometry_types": {
+        "MultiPolygon": 6
+      },
+      "property_key_counts": {
+        "osm_id": 6,
+        "code": 6,
+        "fclass": 6,
+        "name": 4
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.431818,
+        -27.1867323,
+        -109.3137798,
+        -27.0728929
+      ],
+      "samples": [
+        {
+          "osm_id": "26273549",
+          "code": 4141,
+          "fclass": "beach",
+          "name": "Anakena",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "27781758",
+          "code": 4141,
+          "fclass": "beach",
+          "name": "Ovahe",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "28382727",
+          "code": 4141,
+          "fclass": "beach",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_religiosa.geojson": {
+      "file": "Datos GeoJSON/area_religiosa.geojson",
+      "num_features": 9,
+      "geometry_types": {
+        "MultiPolygon": 9
+      },
+      "property_key_counts": {
+        "osm_id": 9,
+        "code": 9,
+        "fclass": 9,
+        "name": 9
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4390773,
+        -27.1622639,
+        -109.4173882,
+        -27.1482529
+      ],
+      "samples": [
+        {
+          "osm_id": "502217406",
+          "code": 3100,
+          "fclass": "christian",
+          "name": "Templo Evangélico",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "502218119",
+          "code": 3100,
+          "fclass": "christian",
+          "name": "Hare Pure",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "502218153",
+          "code": 3100,
+          "fclass": "christian",
+          "name": "Templo Evangélico",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_reserva_agua.geojson": {
+      "file": "Datos GeoJSON/area_reserva_agua.geojson",
+      "num_features": 15,
+      "geometry_types": {
+        "MultiPolygon": 15
+      },
+      "property_key_counts": {
+        "osm_id": 15,
+        "code": 15,
+        "fclass": 15,
+        "name": 3
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4403124,
+        -27.1910732,
+        -109.2875458,
+        -27.0825942
+      ],
+      "samples": [
+        {
+          "osm_id": "27596",
+          "code": 8200,
+          "fclass": "water",
+          "name": "Rano Raraku",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "28530613",
+          "code": 8221,
+          "fclass": "wetland",
+          "name": "Rano Kau",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "229507584",
+          "code": 8200,
+          "fclass": "water",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_transporte.geojson": {
+      "file": "Datos GeoJSON/area_transporte.geojson",
+      "num_features": 9,
+      "geometry_types": {
+        "MultiPolygon": 9
+      },
+      "property_key_counts": {
+        "osm_id": 9,
+        "code": 9,
+        "fclass": 9,
+        "name": 6
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4390946,
+        -27.1728076,
+        -109.4052002,
+        -27.140562
+      ],
+      "samples": [
+        {
+          "osm_id": "200596376",
+          "code": 5656,
+          "fclass": "apron",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "502217277",
+          "code": 5641,
+          "fclass": "taxi",
+          "name": "Central Radio Taxi",
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "502218021",
+          "code": 5652,
+          "fclass": "airfield",
+          "name": "Aeropuerto Internacional Mataveri",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "area_uso_de_tierra_agua.geojson": {
+      "file": "Datos GeoJSON/area_uso_de_tierra_agua.geojson",
+      "num_features": 810,
+      "geometry_types": {
+        "MultiPolygon": 810
+      },
+      "property_key_counts": {
+        "osm_id": 810,
+        "code": 810,
+        "fclass": 810,
+        "name": 22
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -113.1934128,
+        -30.5439682,
+        -101.644783,
+        -23.1261864
+      ],
+      "samples": [
+        {
+          "osm_id": "27758071",
+          "code": 7218,
+          "fclass": "grass",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "27758106",
+          "code": 7218,
+          "fclass": "grass",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "osm_id": "27758124",
+          "code": 7218,
+          "fclass": "grass",
+          "name": null,
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "limite_administrativa.geojson": {
+      "file": "Datos GeoJSON/limite_administrativa.geojson",
+      "num_features": 13,
+      "geometry_types": {
+        "MultiLineString": 13
+      },
+      "property_key_counts": {
+        "id": 13,
+        "shape_leng": 13,
+        "tipo": 13,
+        "nombre": 13
+      },
+      "crs": "urn:ogc:def:crs:EPSG::32712",
+      "bbox": [
+        653027.3860999998,
+        6990235.6171,
+        1062727.7341999998,
+        7059920.599
+      ],
+      "samples": [
+        {
+          "id": 1,
+          "shape_leng": 1318.76069271,
+          "tipo": 6.0,
+          "nombre": "Costa",
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "id": 2,
+          "shape_leng": 598.6384631070001,
+          "tipo": 6.0,
+          "nombre": "Costa",
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "id": 3,
+          "shape_leng": 187.979039636,
+          "tipo": 6.0,
+          "nombre": "Costa",
+          "geometry_type": "MultiLineString"
+        }
+      ]
+    },
+    "linea_calles.geojson": {
+      "file": "Datos GeoJSON/linea_calles.geojson",
+      "num_features": 1114,
+      "geometry_types": {
+        "MultiLineString": 1114
+      },
+      "property_key_counts": {
+        "osm_id": 1114,
+        "code": 1114,
+        "fclass": 1114,
+        "name": 127
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4464915,
+        -27.1943565,
+        -109.2321826,
+        -27.0553437
+      ],
+      "samples": [
+        {
+          "osm_id": "23122887",
+          "code": 5115,
+          "fclass": "tertiary",
+          "name": "Reiŋa Karo - Oroŋo",
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "osm_id": "26266353",
+          "code": 5115,
+          "fclass": "tertiary",
+          "name": "Tu'u Maheke",
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "osm_id": "26266354",
+          "code": 5114,
+          "fclass": "secondary",
+          "name": "Pont",
+          "geometry_type": "MultiLineString"
+        }
+      ]
+    },
+    "linea_flujo_agua.geojson": {
+      "file": "Datos GeoJSON/linea_flujo_agua.geojson",
+      "num_features": 71,
+      "geometry_types": {
+        "MultiLineString": 71
+      },
+      "property_key_counts": {
+        "osm_id": 71,
+        "code": 71,
+        "fclass": 71,
+        "width": 71,
+        "name": 6
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4306469,
+        -27.1478107,
+        -109.23516,
+        -27.0551134
+      ],
+      "samples": [
+        {
+          "osm_id": "426015604",
+          "code": 8102,
+          "fclass": "stream",
+          "width": 0,
+          "name": null,
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "osm_id": "501296020",
+          "code": 8102,
+          "fclass": "stream",
+          "width": 0,
+          "name": null,
+          "geometry_type": "MultiLineString"
+        },
+        {
+          "osm_id": "501296021",
+          "code": 8102,
+          "fclass": "stream",
+          "width": 0,
+          "name": null,
+          "geometry_type": "MultiLineString"
+        }
+      ]
+    },
+    "manzanas_isla_de_pascua.geojson": {
+      "file": "Datos GeoJSON/manzanas_isla_de_pascua.geojson",
+      "num_features": 42,
+      "geometry_types": {
+        "MultiPolygon": 42
+      },
+      "property_key_counts": {
+        "CUT": 42,
+        "REGION": 42,
+        "PROVINCIA": 42,
+        "COMUNA": 42,
+        "NOMBRE_DIS": 42,
+        "CODIGO_DIS": 42,
+        "MANZENT": 42,
+        "ZONA_CENSA": 42,
+        "MANZANA": 42,
+        "TOTAL_PERS": 42,
+        "TOTAL_HOMB": 42,
+        "TOTAL_MUJE": 42,
+        "PERSONAS_0": 42,
+        "PERSONAS_6": 42,
+        "PERSONAS_1": 42,
+        "PERSONAS_M": 42,
+        "PERSONAS_E": 42,
+        "PUEBLOS_IN": 42,
+        "TOTAL_VIV_": 42,
+        "TOTAL_VIV1": 42,
+        "VIV_OCUPA_": 42,
+        "TOTAL_VIVI": 42,
+        "CANTIDAD_H": 42,
+        "VIV_TIPO_C": 42,
+        "VIV_TIPO_D": 42,
+        "VIV_TIPO_T": 42,
+        "VIV_TIPO_P": 42,
+        "VIV_TIPO_M": 42,
+        "VIV_TIPO_1": 42,
+        "VIV_TIPO_O": 42,
+        "VIV_PARED_": 42,
+        "VIV_PARED1": 42,
+        "VIV_PARE_1": 42,
+        "VIV_PARE_2": 42,
+        "VIV_PARE_3": 42,
+        "VIV_PARE_4": 42,
+        "VIV_TECHO_": 42,
+        "VIV_TECHO1": 42,
+        "VIV_TECH_1": 42,
+        "VIV_TECH_2": 42,
+        "VIV_TECH_3": 42,
+        "VIV_TECH_4": 42,
+        "VIV_TECH_5": 42,
+        "VIV_PISO_P": 42,
+        "VIV_PISO_R": 42,
+        "VIV_PISO_B": 42,
+        "VIV_PISO_C": 42,
+        "VIV_PISO_T": 42,
+        "VIV_MATERI": 42,
+        "VIV_MATE_1": 42,
+        "VIV_MATE_2": 42,
+        "VIV_AGUA_R": 42,
+        "VIV_AGUA_P": 42,
+        "VIV_AGUA_C": 42,
+        "VIV_AGUA_1": 42
+      },
+      "crs": null,
+      "bbox": [
+        -12183256.3376,
+        -3144379.110199999,
+        -12178360.9927,
+        -3138401.342099998
+      ],
+      "samples": [
+        {
+          "CUT": 5201,
+          "REGION": "REGIÓN DE VALPARAÍSO",
+          "PROVINCIA": "ISLA DE PASCUA",
+          "COMUNA": "ISLA DE PASCUA",
+          "NOMBRE_DIS": "HANGA ROA",
+          "CODIGO_DIS": 1,
+          "MANZENT": "5201011001500",
+          "ZONA_CENSA": 1,
+          "MANZANA": 500,
+          "TOTAL_PERS": 200,
+          "TOTAL_HOMB": "111",
+          "TOTAL_MUJE": "89",
+          "PERSONAS_0": "20",
+          "PERSONAS_6": "27",
+          "PERSONAS_1": "145",
+          "PERSONAS_M": "8",
+          "PERSONAS_E": "6",
+          "PUEBLOS_IN": "117",
+          "TOTAL_VIV_": 95,
+          "TOTAL_VIV1": 2,
+          "VIV_OCUPA_": 67,
+          "TOTAL_VIVI": 97,
+          "CANTIDAD_H": 68,
+          "VIV_TIPO_C": 80,
+          "VIV_TIPO_D": 0,
+          "VIV_TIPO_T": 8,
+          "VIV_TIPO_P": 1,
+          "VIV_TIPO_M": 0,
+          "VIV_TIPO_1": 0,
+          "VIV_TIPO_O": 6,
+          "VIV_PARED_": 2,
+          "VIV_PARED1": 13,
+          "VIV_PARE_1": 42,
+          "VIV_PARE_2": 6,
+          "VIV_PARE_3": 1,
+          "VIV_PARE_4": 3,
+          "VIV_TECHO_": 5,
+          "VIV_TECHO1": 0,
+          "VIV_TECH_1": 62,
+          "VIV_TECH_2": 0,
+          "VIV_TECH_3": 0,
+          "VIV_TECH_4": 0,
+          "VIV_TECH_5": 0,
+          "VIV_PISO_P": 52,
+          "VIV_PISO_R": 5,
+          "VIV_PISO_B": 6,
+          "VIV_PISO_C": 1,
+          "VIV_PISO_T": 3,
+          "VIV_MATERI": 46,
+          "VIV_MATE_1": 15,
+          "VIV_MATE_2": 6,
+          "VIV_AGUA_R": 53,
+          "VIV_AGUA_P": 6,
+          "VIV_AGUA_C": 8,
+          "VIV_AGUA_1": 0,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "CUT": 5201,
+          "REGION": "REGIÓN DE VALPARAÍSO",
+          "PROVINCIA": "ISLA DE PASCUA",
+          "COMUNA": "ISLA DE PASCUA",
+          "NOMBRE_DIS": "HANGA ROA",
+          "CODIGO_DIS": 1,
+          "MANZENT": "5201011001002",
+          "ZONA_CENSA": 1,
+          "MANZANA": 2,
+          "TOTAL_PERS": 125,
+          "TOTAL_HOMB": "64",
+          "TOTAL_MUJE": "61",
+          "PERSONAS_0": "12",
+          "PERSONAS_6": "20",
+          "PERSONAS_1": "86",
+          "PERSONAS_M": "7",
+          "PERSONAS_E": "11",
+          "PUEBLOS_IN": "89",
+          "TOTAL_VIV_": 54,
+          "TOTAL_VIV1": 1,
+          "VIV_OCUPA_": 36,
+          "TOTAL_VIVI": 55,
+          "CANTIDAD_H": 36,
+          "VIV_TIPO_C": 51,
+          "VIV_TIPO_D": 0,
+          "VIV_TIPO_T": 0,
+          "VIV_TIPO_P": 0,
+          "VIV_TIPO_M": 2,
+          "VIV_TIPO_1": 1,
+          "VIV_TIPO_O": 0,
+          "VIV_PARED_": 8,
+          "VIV_PARED1": 6,
+          "VIV_PARE_1": 17,
+          "VIV_PARE_2": 5,
+          "VIV_PARE_3": 0,
+          "VIV_PARE_4": 0,
+          "VIV_TECHO_": 6,
+          "VIV_TECHO1": 0,
+          "VIV_TECH_1": 30,
+          "VIV_TECH_2": 0,
+          "VIV_TECH_3": 0,
+          "VIV_TECH_4": 0,
+          "VIV_TECH_5": 0,
+          "VIV_PISO_P": 34,
+          "VIV_PISO_R": 1,
+          "VIV_PISO_B": 1,
+          "VIV_PISO_C": 0,
+          "VIV_PISO_T": 0,
+          "VIV_MATERI": 29,
+          "VIV_MATE_1": 7,
+          "VIV_MATE_2": 0,
+          "VIV_AGUA_R": 28,
+          "VIV_AGUA_P": 8,
+          "VIV_AGUA_C": 0,
+          "VIV_AGUA_1": 0,
+          "geometry_type": "MultiPolygon"
+        },
+        {
+          "CUT": 5201,
+          "REGION": "REGIÓN DE VALPARAÍSO",
+          "PROVINCIA": "ISLA DE PASCUA",
+          "COMUNA": "ISLA DE PASCUA",
+          "NOMBRE_DIS": "HANGA ROA",
+          "CODIGO_DIS": 1,
+          "MANZENT": "5201011001009",
+          "ZONA_CENSA": 1,
+          "MANZANA": 9,
+          "TOTAL_PERS": 148,
+          "TOTAL_HOMB": "71",
+          "TOTAL_MUJE": "77",
+          "PERSONAS_0": "9",
+          "PERSONAS_6": "26",
+          "PERSONAS_1": "105",
+          "PERSONAS_M": "8",
+          "PERSONAS_E": "6",
+          "PUEBLOS_IN": "70",
+          "TOTAL_VIV_": 47,
+          "TOTAL_VIV1": 6,
+          "VIV_OCUPA_": 40,
+          "TOTAL_VIVI": 53,
+          "CANTIDAD_H": 40,
+          "VIV_TIPO_C": 45,
+          "VIV_TIPO_D": 0,
+          "VIV_TIPO_T": 1,
+          "VIV_TIPO_P": 1,
+          "VIV_TIPO_M": 0,
+          "VIV_TIPO_1": 0,
+          "VIV_TIPO_O": 0,
+          "VIV_PARED_": 0,
+          "VIV_PARED1": 8,
+          "VIV_PARE_1": 28,
+          "VIV_PARE_2": 4,
+          "VIV_PARE_3": 0,
+          "VIV_PARE_4": 0,
+          "VIV_TECHO_": 2,
+          "VIV_TECHO1": 0,
+          "VIV_TECH_1": 37,
+          "VIV_TECH_2": 0,
+          "VIV_TECH_3": 0,
+          "VIV_TECH_4": 1,
+          "VIV_TECH_5": 0,
+          "VIV_PISO_P": 28,
+          "VIV_PISO_R": 1,
+          "VIV_PISO_B": 6,
+          "VIV_PISO_C": 5,
+          "VIV_PISO_T": 0,
+          "VIV_MATERI": 24,
+          "VIV_MATE_1": 15,
+          "VIV_MATE_2": 1,
+          "VIV_AGUA_R": 40,
+          "VIV_AGUA_P": 0,
+          "VIV_AGUA_C": 0,
+          "VIV_AGUA_1": 0,
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "mapa_comuna.geojson": {
+      "file": "Datos GeoJSON/mapa_comuna.geojson",
+      "num_features": 1,
+      "geometry_types": {
+        "MultiPolygon": 1
+      },
+      "property_key_counts": {
+        "COUNTRY": 1,
+        "NAME_1": 1,
+        "NAME_2": 1,
+        "NAME_3": 1
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.45491613699994,
+        -27.20230007899994,
+        -105.360062,
+        -26.469933
+      ],
+      "samples": [
+        {
+          "COUNTRY": "Chile",
+          "NAME_1": "Valparaíso",
+          "NAME_2": "Isla de Pascua",
+          "NAME_3": "Isla de Pascua",
+          "geometry_type": "MultiPolygon"
+        }
+      ]
+    },
+    "punto_atraccion_turistica.geojson": {
+      "file": "Datos GeoJSON/punto_atraccion_turistica.geojson",
+      "num_features": 138,
+      "geometry_types": {
+        "Point": 138
+      },
+      "property_key_counts": {
+        "osm_id": 138,
+        "code": 138,
+        "fclass": 138,
+        "population": 138,
+        "name": 133
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4497168,
+        -27.1926744,
+        -109.231936,
+        -27.0569682
+      ],
+      "samples": [
+        {
+          "osm_id": "214231955",
+          "code": 1002,
+          "fclass": "town",
+          "population": 7163,
+          "name": "Hanga Roa",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "1243637849",
+          "code": 1050,
+          "fclass": "locality",
+          "population": 0,
+          "name": "ʻŌroŋo",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "1439353101",
+          "code": 1050,
+          "fclass": "locality",
+          "population": 0,
+          "name": "Papa Vaka Petroglifos",
+          "geometry_type": "Point"
+        }
+      ]
+    },
+    "punto_interes.geojson": {
+      "file": "Datos GeoJSON/punto_interes.geojson",
+      "num_features": 2122,
+      "geometry_types": {
+        "Point": 2122
+      },
+      "property_key_counts": {
+        "osm_id": 2122,
+        "code": 2122,
+        "fclass": 2122,
+        "name": 1997
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.447946,
+        -27.1931525,
+        -109.22776,
+        -27.0559807
+      ],
+      "samples": [
+        {
+          "osm_id": "831336484",
+          "code": 2301,
+          "fclass": "restaurant",
+          "name": "La Kaleta",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "831336490",
+          "code": 2733,
+          "fclass": "archaeological",
+          "name": "Petroglyph Rano Kau",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "1131726437",
+          "code": 2301,
+          "fclass": "restaurant",
+          "name": null,
+          "geometry_type": "Point"
+        }
+      ]
+    },
+    "punto_naturaleza.geojson": {
+      "file": "Datos GeoJSON/punto_naturaleza.geojson",
+      "num_features": 272,
+      "geometry_types": {
+        "Point": 272
+      },
+      "property_key_counts": {
+        "osm_id": 272,
+        "code": 272,
+        "fclass": 272,
+        "name": 76
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4482583,
+        -27.1894106,
+        -109.2416811,
+        -27.0564242
+      ],
+      "samples": [
+        {
+          "osm_id": "287862481",
+          "code": 4113,
+          "fclass": "volcano",
+          "name": "Ma'uŋa Eo",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "305166217",
+          "code": 4113,
+          "fclass": "volcano",
+          "name": "Maꞌuŋa Tere Vaka",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "305166386",
+          "code": 4113,
+          "fclass": "volcano",
+          "name": "Ma'uŋa Pu'a Katiki",
+          "geometry_type": "Point"
+        }
+      ]
+    },
+    "punto_religioso.geojson": {
+      "file": "Datos GeoJSON/punto_religioso.geojson",
+      "num_features": 2,
+      "geometry_types": {
+        "Point": 2
+      },
+      "property_key_counts": {
+        "osm_id": 2,
+        "code": 2,
+        "fclass": 2,
+        "name": 1
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.41276,
+        -27.1604031,
+        -109.4092311,
+        -27.1021973
+      ],
+      "samples": [
+        {
+          "osm_id": "4939036626",
+          "code": 3100,
+          "fclass": "christian",
+          "name": null,
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "5195243921",
+          "code": 3100,
+          "fclass": "christian",
+          "name": "Salon del Reine de Testigos Jehová",
+          "geometry_type": "Point"
+        }
+      ]
+    },
+    "punto_trafico.geojson": {
+      "file": "Datos GeoJSON/punto_trafico.geojson",
+      "num_features": 22,
+      "geometry_types": {
+        "Point": 22
+      },
+      "property_key_counts": {
+        "osm_id": 22,
+        "code": 22,
+        "fclass": 22,
+        "name": 5
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4386902,
+        -27.1656541,
+        -109.2873886,
+        -27.08536
+      ],
+      "samples": [
+        {
+          "osm_id": "311767805",
+          "code": 5204,
+          "fclass": "crossing",
+          "name": null,
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "1131726425",
+          "code": 5250,
+          "fclass": "fuel",
+          "name": "Puna Vai",
+          "geometry_type": "Point"
+        },
+        {
+          "osm_id": "1363940259",
+          "code": 5302,
+          "fclass": "marina",
+          "name": "Haŋa Roa O'Tai",
+          "geometry_type": "Point"
+        }
+      ]
+    },
+    "punto_transporte.geojson": {
+      "file": "Datos GeoJSON/punto_transporte.geojson",
+      "num_features": 1,
+      "geometry_types": {
+        "Point": 1
+      },
+      "property_key_counts": {
+        "osm_id": 1,
+        "code": 1,
+        "fclass": 1,
+        "name": 1
+      },
+      "crs": "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "bbox": [
+        -109.4391022,
+        -27.1542461,
+        -109.4391022,
+        -27.1542461
+      ],
+      "samples": [
+        {
+          "osm_id": "12626555959",
+          "code": 5661,
+          "fclass": "ferry_terminal",
+          "name": "Cruise Berth for Tender",
+          "geometry_type": "Point"
+        }
+      ]
+    }
+  }
+}

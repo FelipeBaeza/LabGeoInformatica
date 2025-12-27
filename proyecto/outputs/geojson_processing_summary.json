@@ -1,0 +1,59 @@
+{
+  "target_epsg": 32712,
+  "files": [
+    {
+      "file": "/home/felipe/Documentos/LabGeoInformatica/Datos GeoJSON/manzanas_isla_de_pascua.geojson",
+      "exists": true,
+      "original_crs": "EPSG:4326",
+      "assigned_crs": null,
+      "reprojected": true,
+      "n_features": 42,
+      "n_invalid": 42,
+      "errors": "GEOSException('Shell empty after removing invalid points')"
+    },
+    {
+      "file": "/home/felipe/Documentos/LabGeoInformatica/Datos GeoJSON/limite_administrativa.geojson",
+      "exists": true,
+      "original_crs": "EPSG:32712",
+      "assigned_crs": null,
+      "reprojected": false,
+      "n_features": 13,
+      "n_invalid": 0,
+      "errors": null,
+      "layer": "/home/felipe/Documentos/LabGeoInformatica/proyecto/data/processed/prepared.gpkg:limite_administrativa"
+    },
+    {
+      "file": "/home/felipe/Documentos/LabGeoInformatica/Datos GeoJSON/linea_calles.geojson",
+      "exists": true,
+      "original_crs": "EPSG:4326",
+      "assigned_crs": null,
+      "reprojected": true,
+      "n_features": 1114,
+      "n_invalid": 0,
+      "errors": null,
+      "layer": "/home/felipe/Documentos/LabGeoInformatica/proyecto/data/processed/prepared.gpkg:linea_calles"
+    },
+    {
+      "file": "/home/felipe/Documentos/LabGeoInformatica/Datos GeoJSON/mapa_comuna.geojson",
+      "exists": true,
+      "original_crs": "EPSG:4326",
+      "assigned_crs": null,
+      "reprojected": true,
+      "n_features": 1,
+      "n_invalid": 0,
+      "errors": null,
+      "layer": "/home/felipe/Documentos/LabGeoInformatica/proyecto/data/processed/prepared.gpkg:mapa_comuna"
+    },
+    {
+      "file": "/home/felipe/Documentos/LabGeoInformatica/Datos GeoJSON/punto_interes.geojson",
+      "exists": true,
+      "original_crs": "EPSG:4326",
+      "assigned_crs": null,
+      "reprojected": true,
+      "n_features": 2122,
+      "n_invalid": 0,
+      "errors": null,
+      "layer": "/home/felipe/Documentos/LabGeoInformatica/proyecto/data/processed/prepared.gpkg:punto_interes"
+    }
+  ]
+}
