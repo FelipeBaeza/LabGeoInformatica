@@ -78,7 +78,9 @@
 
 \author{
     Felipe Baeza \\
-    \texttt{felipe.baeza@usach.cl}
+    \texttt{felipe.baeza.m@usach.cl}
+    Catalina López \\
+    \texttt{catalina.lopez.a@usach.cl}
 }
 
 \date{\today}
@@ -96,18 +98,19 @@
 \section{Resumen Ejecutivo}
 %==============================================================================
 
-Este proyecto desarrolla un \textbf{Sistema de Análisis Geoespacial Integral} para Isla de Pascua (Rapa Nui), combinando técnicas de análisis espacial, geoestadística y machine learning sobre datos multi-fuente. El sistema incluye:
+Este proyecto desarrolla un \textbf{Sistema de Análisis Geoespacial Integral} para Isla de Pascua (Rapa Nui), abordando el problema de la \textbf{presión demográfica} y la necesidad de monitorear la \textbf{capacidad de carga territorial} establecida por la Ley 21.070. El sistema combina técnicas de análisis espacial, geoestadística y machine learning sobre datos multi-fuente:
 
 \begin{itemize}
-    \item \textbf{Infraestructura containerizada} con Docker compose (PostGIS + Jupyter + Streamlit)
+    \item \textbf{Infraestructura containerizada} con Docker Compose (PostGIS + Jupyter + Streamlit)
     \item \textbf{Base de datos espacial} PostGIS con 23 capas geográficas vectoriales
     \item \textbf{Pipeline automatizado} de descarga y procesamiento de datos desde OpenStreetMap
     \item \textbf{Análisis exploratorio espacial} (ESDA) con autocorrelación y hot spots
     \item \textbf{Modelos de machine learning} para predicción de densidad edificatoria
     \item \textbf{Aplicación web interactiva} con Streamlit para visualización de resultados
+    \item \textbf{Indicadores territoriales} alineados con el Modelo de Capacidad de Carga (MCCIP)
 \end{itemize}
 
-El proyecto demuestra cómo integrar múltiples tecnologías geoespaciales modernas para generar insights territoriales sobre un área remota y geográficamente única como Isla de Pascua.
+El proyecto demuestra cómo la geoinformática puede contribuir a generar \textbf{evidencia territorial} para apoyar la implementación de políticas públicas en un territorio especial con desafíos únicos de sostenibilidad.
 
 %==============================================================================
 \section{Introducción}
@@ -115,14 +118,15 @@ El proyecto demuestra cómo integrar múltiples tecnologías geoespaciales moder
 
 \subsection{Contexto del Problema}
 
-Isla de Pascua (Rapa Nui) es un territorio especial de Chile ubicado en el Océano Pacífico, conocido mundialmente por sus moáis y su singular patrimonio cultural. Sin embargo, enfrenta desafíos contemporáneos de planificación territorial:
+Isla de Pascua (Rapa Nui) es un \textbf{Territorio Especial} de Chile ubicado en el Océano Pacífico, conocido mundialmente por sus moáis y su singular patrimonio cultural. Sin embargo, enfrenta desafíos críticos de planificación territorial reconocidos por la \textbf{Ley 21.070 (2018)}:
 
 \begin{itemize}
-    \item \textbf{Crecimiento urbano} no planificado en Hanga Roa
-    \item \textbf{Presión turística} sobre infraestructura limitada
-    \item \textbf{Aislamiento geográfico} que dificulta acceso a servicios
-    \item \textbf{Fragilidad ecosistémica} requiriendo gestión cuidadosa del territorio
-    \item \textbf{Escasez de estudios cuantitativos} sobre patrones espaciales urbanos
+    \item \textbf{Crecimiento poblacional acelerado}: 116\% de aumento entre 2002-2017
+    \item \textbf{Presión turística}: Sobre 150.000 visitantes anuales pre-pandemia
+    \item \textbf{Saturación de infraestructura}: Sistemas de agua, alcantarillado y residuos al límite
+    \item \textbf{Expansión urbana descontrolada}: Desbordamiento hacia zonas arqueológicas protegidas
+    \item \textbf{Fragilidad ecosistémica}: Acuífero limitado con riesgo de salinización
+    \item \textbf{Escasez de herramientas de monitoreo}: Necesidad de indicadores territoriales cuantitativos
 \end{itemize}
 
 \subsection{Justificación}
@@ -161,7 +165,74 @@ Desarrollar un sistema integral de análisis geoespacial que permita caracteriza
     \item ¿Existen clusters significativos (hot spots) de densidad urbana?
     \item ¿Qué variables espaciales predicen mejor la densidad edificatoria?
     \item ¿Cómo se relaciona la infraestructura vial con la distribución de amenidades?
+    \item ¿Cómo puede la geoinformática contribuir al monitoreo de la capacidad de carga demográfica?
 \end{enumerate}
+
+%==============================================================================
+\section{Problema Territorial: Presión Demográfica}
+%==============================================================================
+
+\subsection{Contexto del Territorio Especial}
+
+Isla de Pascua (Rapa Nui) constituye un \textbf{Territorio Especial} según la Constitución Política de Chile (Art. 126 bis), con características únicas que demandan una gestión territorial diferenciada:
+
+\begin{itemize}
+    \item \textbf{Aislamiento extremo}: Ubicada a 3.700 km del continente, es uno de los territorios habitados más remotos del mundo
+    \item \textbf{Fragilidad ecológica}: Superficie limitada de 163,6 km² con ecosistemas insulares vulnerables
+    \item \textbf{Patrimonio cultural único}: Sitio Patrimonio de la Humanidad UNESCO desde 1995
+    \item \textbf{Población creciente}: Incremento sostenido de residentes y turistas que presionan la infraestructura
+\end{itemize}
+
+\subsection{Diagnóstico: Sobrecarga Demográfica}
+
+Según el \textbf{Modelo de Capacidad de Carga Demográfica (MCCIP)} desarrollado por el Instituto de Estudios Urbanos UC para SUBDERE, Isla de Pascua enfrenta una crisis de sostenibilidad territorial:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Factor} & \textbf{Situación Crítica} \\
+\midrule
+Crecimiento poblacional & Aumento del 116\% entre 2002-2017 (de 3.791 a 8.200 hab.) \\
+Flujo turístico & Sobre 150.000 visitantes anuales pre-pandemia \\
+Infraestructura & Saturación de agua, alcantarillado y residuos \\
+Expansión urbana & Desbordamiento hacia zonas arqueológicas \\
+Recursos hídricos & Acuífero limitado con riesgo de salinización \\
+\bottomrule
+\end{tabular}
+\caption{Factores críticos de presión demográfica en Rapa Nui}
+\end{table}
+
+\subsection{Marco Legal: Ley 21.070}
+
+La \textbf{Ley 21.070 (2018)} ``Regula el ejercicio de los derechos a residir, permanecer y trasladarse hacia y desde el territorio especial de Isla de Pascua'' establece:
+
+\begin{itemize}
+    \item Restricción de permanencia máxima de 30 días para turistas
+    \item Requisitos de acreditación para residentes no Rapa Nui
+    \item Obligación de establecer la \textbf{capacidad de carga demográfica} (Art. 13)
+    \item Creación del \textbf{Índice Pascua (IPA)} como indicador integrado
+\end{itemize}
+
+El \textbf{Decreto N° 1120 (2018)} establece la fórmula para calcular la capacidad de carga basada en 21 variables agrupadas en 4 subsistemas:
+
+\begin{enumerate}
+    \item \textbf{Subsistema Población}: Dinámica demográfica, migración, turismo
+    \item \textbf{Subsistema Medio Ambiente}: Agua, residuos, energía, biodiversidad
+    \item \textbf{Subsistema Económico}: Empleo, vivienda, transporte, servicios
+    \item \textbf{Subsistema Socio-Cultural}: Patrimonio, identidad Rapa Nui, calidad de vida
+\end{enumerate}
+
+\subsection{Contribución de la Geoinformática}
+
+Este proyecto contribuye al monitoreo territorial mediante:
+
+\begin{itemize}
+    \item \textbf{Indicadores espaciales}: Densidad de edificaciones, cobertura de servicios
+    \item \textbf{Detección de patrones}: Hot spots de concentración urbana
+    \item \textbf{Modelos predictivos}: Proyección de expansión territorial
+    \item \textbf{Visualización}: Dashboard para tomadores de decisiones
+\end{itemize}
 
 %==============================================================================
 \section{Área de Estudio}
@@ -643,9 +714,22 @@ OE6: Aplicación web Streamlit & \checkmark Cumplido \\
 \begin{enumerate}
     \item \textbf{Metodológico}: Pipeline reproducible aplicable a otras comunas
     \item \textbf{Técnico}: Optimizaciones de rendimiento (spatial joins vectorizados)
-    \item \textbf{Práctico}: Información territorial útil para Isla de Pascua
+    \item \textbf{Práctico}: Información territorial útil para monitoreo de capacidad de carga
     \item \textbf{Académico}: Integración exitosa de múltiples técnicas geoespaciales
+    \item \textbf{Institucional}: Alineación con Ley 21.070 y modelo MCCIP
 \end{enumerate}
+
+\subsection{Vinculación con Instrumentos de Planificación}
+
+Este proyecto se alinea con los siguientes instrumentos oficiales:
+
+\begin{itemize}
+    \item \textbf{PROT Valparaíso Insular}: Plan Regional de Ordenamiento Territorial
+    \item \textbf{Ley 21.070}: Marco legal para gestión de capacidad de carga
+    \item \textbf{MCCIP}: Modelo oficial de capacidad de carga demográfica (21 variables)
+    \item \textbf{SIT Rapa Nui (MINAGRI)}: Sistema de información territorial agrícola
+    \item \textbf{Decreto N° 1120}: Establece el Índice Pascua (IPA)
+\end{itemize}
 
 \subsection{Trabajo Futuro}
 
@@ -682,6 +766,16 @@ OE6: Aplicación web Streamlit & \checkmark Cumplido \\
     \item Chen, T., \& Guestrin, C. (2016). XGBoost: A scalable tree boosting system. \textit{Proceedings of KDD}, 785-794.
     
     \item INE Chile. (2017). Censo de Población y Vivienda 2017. Instituto Nacional de Estadísticas.
+    
+    \item Ley 21.070 (2018). Regula el ejercicio de los derechos a residir, permanecer y trasladarse hacia y desde el territorio especial de Isla de Pascua. Biblioteca del Congreso Nacional.
+    
+    \item Decreto N° 1120 (2018). Establece la capacidad de carga demográfica del territorio especial de Isla de Pascua. Ministerio del Interior.
+    
+    \item Bergamini, K., Moris, R., Gilabert, H., Zaviezo, D. \& Ángel, P. (2021). Demographic Carrying Capacity Model, a tool for decision making in Rapanui. \textit{Island Studies Journal}.
+    
+    \item Instituto de Estudios Urbanos UC (2018). Modelo de Capacidad de Carga Demográfica para el territorio de Isla de Pascua (MCCIP). SUBDERE.
+    
+    \item MINAGRI (2017). Sistema de Información Territorial de Rapa Nui. \url{https://minagri.gob.cl/servicios/sistema-de-informacion-territorial-de-rapa-nui/}
 \end{enumerate}
 
 %==============================================================================
