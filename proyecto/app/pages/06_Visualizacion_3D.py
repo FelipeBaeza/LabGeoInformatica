@@ -14,10 +14,12 @@ from sqlalchemy import create_engine
 st.set_page_config(page_title="Modelo 3D - Isla de Pascua", layout="wide")
 
 st.title("Modelo 3D de Densidad Urbana")
+
 st.markdown("""
-Este modelo representa la **densidad de edificaciones** en Isla de Pascua.
-Cada columna indica la cantidad de construcciones en esa zona, permitiendo
-identificar los patrones de asentamiento urbano.
+Este modelo tridimensional representa la **densidad de edificaciones** en Isla de Pascua.
+Cada columna del mapa indica la cantidad de construcciones en esa zona: columnas mas altas 
+significan mayor concentracion de edificios. Esta visualizacion permite identificar rapidamente 
+las areas de mayor desarrollo urbano, lo cual es clave para la planificacion territorial.
 """)
 st.markdown("---")
 
@@ -86,8 +88,8 @@ height_multiplier = st.sidebar.slider(
 # ============================================================================
 
 # Convertir a CRS proyectado para calculos de area
-# Usar un CRS local apropiado para Isla de Pascua
-buildings_proj = buildings.to_crs("EPSG:32706")  # UTM 6S (zona del Pacifico Sur)
+# Usar UTM zona 12S para Isla de Pascua (Pacifico Sur)
+buildings_proj = buildings.to_crs("EPSG:32712")
 
 # Calcular area de cada edificio
 buildings_proj['area_m2'] = buildings_proj.geometry.area

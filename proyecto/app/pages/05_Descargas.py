@@ -1,259 +1,310 @@
+"""
+Página de Descargas - Sistema de Análisis Territorial
+Permite descargar datos, mapas y reportes del proyecto.
+"""
 import streamlit as st
-import pandas as pd
 import geopandas as gpd
-from pathlib import Path
+import pandas as pd
+import os
 import json
-import pickle
-import io
-import base64
+from pathlib import Path
+from io import BytesIO
+from sqlalchemy import create_engine
 
-st.set_page_config(page_title="Descargas - Isla de Pascua", layout="wide")
+st.set_page_config(page_title="Descargas", layout="wide")
 
-st.title("Centro de Descargas")
-st.markdown("---")
-
-# Rutas
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DATA_PROCESSED = BASE_DIR / "data" / "processed"
-OUTPUTS = BASE_DIR / "outputs"
-
+st.title("📥 Centro de Descargas")
 st.markdown("""
-Descarga los datos procesados, modelos entrenados y resultados del análisis territorial de Isla de Pascua.
+Descargue los datos, mapas y resultados del análisis territorial de Isla de Pascua.
 """)
 
-# ============================================================================
-# SECCIÓN 1: DATOS GEOESPACIALES
-# ============================================================================
-st.header("Datos Geoespaciales")
+# Configuración BD
+DB_CONFIG = {
+    'host': os.getenv('POSTGRES_HOST', 'localhost'),
+    'port': os.getenv('POSTGRES_PORT', '55432'),
+    'database': os.getenv('POSTGRES_DB', 'geodatabase'),
+    'user': os.getenv('POSTGRES_USER', 'geouser'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'geopass123'),
+}
+
+def get_engine():
+    return create_engine(
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+        f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+    )
+
+
+# =============================================================================
+# SECCIÓN 1: DATOS ESPACIALES
+# =============================================================================
+
+st.header("1. Datos Espaciales")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Datos Vectoriales")
+    st.subheader("📍 Datos desde PostGIS")
     
-    # GeoPackage con grilla
-    gpkg_file = DATA_PROCESSED / "prepared.gpkg"
-    if gpkg_file.exists():
-        with open(gpkg_file, "rb") as f:
-            st.download_button(
-                label="Descargar GeoPackage Completo",
-                data=f,
-                file_name="isla_pascua_datos.gpkg",
-                mime="application/octet-stream",
-                help="Contiene todas las capas vectoriales procesadas"
+    try:
+        engine = get_engine()
+        
+        # Lista de tablas disponibles
+        tables_query = """
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'geoanalisis'
+            ORDER BY table_name
+        """
+        tables_df = pd.read_sql(tables_query, engine)
+        
+        if len(tables_df) > 0:
+            selected_table = st.selectbox(
+                "Seleccione tabla:",
+                tables_df['table_name'].tolist()
             )
-    
-    # Grilla con topografía
-    grid_topo = DATA_PROCESSED / "grid_with_topography.gpkg"
-    if grid_topo.exists():
-        with open(grid_topo, "rb") as f:
-            st.download_button(
-                label="Grilla con Variables Topograficas",
-                data=f,
-                file_name="grid_topografia.gpkg",
-                mime="application/octet-stream"
+            
+            format_option = st.radio(
+                "Formato de descarga:",
+                ["GeoJSON", "CSV (sin geometría)"]
             )
-
-with col2:
-    st.subheader("Datos Raster")
-    
-    # DEM
-    dem_file = DATA_PROCESSED / "dem_isla_pascua_clipped.tif"
-    if dem_file.exists():
-        with open(dem_file, "rb") as f:
-            st.download_button(
-                label="DEM (Modelo Digital Elevación)",
-                data=f,
-                file_name="dem_isla_pascua.tif",
-                mime="image/tiff"
-            )
-    
-    # Hillshade
-    hillshade_file = DATA_PROCESSED / "hillshade_isla_pascua.tif"
-    if hillshade_file.exists():
-        with open(hillshade_file, "rb") as f:
-            st.download_button(
-                label="Hillshade (Sombreado)",
-                data=f,
-                file_name="hillshade_isla_pascua.tif",
-                mime="image/tiff"
-            )
-
-st.markdown("---")
-
-# ============================================================================
-# SECCIÓN 2: DATOS TABULARES
-# ============================================================================
-st.header("Datos Tabulares")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.subheader("Features Topográficos")
-    topo_csv = DATA_PROCESSED / "grid_topographic_features.csv"
-    if topo_csv.exists():
-        df_topo = pd.read_csv(topo_csv)
-        csv_data = df_topo.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="Descargar CSV",
-            data=csv_data,
-            file_name="features_topograficos.csv",
-            mime="text/csv"
-        )
-        st.caption(f"{len(df_topo)} registros")
-
-with col2:
-    st.subheader("Estadísticas ESDA")
-    st.info("Generar desde notebooks de análisis")
-    # Placeholder para estadísticas
-
-with col3:
-    st.subheader("Resultados ML")
-    st.info("Generar desde notebook de ML")
-    # Placeholder para resultados
-
-st.markdown("---")
-
-# ============================================================================
-# SECCIÓN 3: MODELOS ENTRENADOS
-# ============================================================================
-st.header("Modelos de Machine Learning")
-
-st.markdown("""
-Descarga los modelos entrenados para predicción de densidad edificatoria.
-""")
-
-models_dir = OUTPUTS / "models"
-if models_dir.exists():
-    model_files = list(models_dir.glob("*.pkl"))
-    
-    if model_files:
-        cols = st.columns(min(3, len(model_files)))
-        for idx, model_file in enumerate(model_files):
-            with cols[idx % 3]:
-                model_name = model_file.stem.replace("_", " ").title()
-                with open(model_file, "rb") as f:
-                    st.download_button(
-                        label=f"{model_name}",
-                        data=f,
-                        file_name=model_file.name,
-                        mime="application/octet-stream"
+            
+            if st.button("Preparar descarga", key="postgis_download"):
+                with st.spinner("Cargando datos..."):
+                    gdf = gpd.read_postgis(
+                        f'SELECT * FROM geoanalisis."{selected_table}"',
+                        engine, geom_col='geometry'
                     )
+                    
+                    if format_option == "GeoJSON":
+                        geojson_str = gdf.to_json()
+                        st.download_button(
+                            label=f"⬇️ Descargar {selected_table}.geojson",
+                            data=geojson_str,
+                            file_name=f"{selected_table}.geojson",
+                            mime="application/json"
+                        )
+                    else:
+                        # CSV sin geometría
+                        df = pd.DataFrame(gdf.drop(columns=['geometry']))
+                        df['centroid_x'] = gdf.geometry.centroid.x
+                        df['centroid_y'] = gdf.geometry.centroid.y
+                        csv_str = df.to_csv(index=False)
+                        st.download_button(
+                            label=f"⬇️ Descargar {selected_table}.csv",
+                            data=csv_str,
+                            file_name=f"{selected_table}.csv",
+                            mime="text/csv"
+                        )
+                    
+                    st.success(f"✓ {len(gdf)} registros listos para descarga")
+        else:
+            st.warning("No hay tablas disponibles en PostGIS")
+            
+    except Exception as e:
+        st.error(f"Error conectando a PostGIS: {e}")
+        st.info("Asegúrese de que el contenedor postgis esté corriendo")
+
+with col2:
+    st.subheader("📁 Datos Locales")
+    
+    data_path = Path("/data/raw/isla_de_pascua")
+    if not data_path.exists():
+        data_path = Path("../data/raw/isla_de_pascua")
+    
+    if data_path.exists():
+        geojson_files = list(data_path.glob("*.geojson"))
+        
+        if geojson_files:
+            selected_file = st.selectbox(
+                "Seleccione archivo:",
+                [f.name for f in geojson_files]
+            )
+            
+            filepath = data_path / selected_file
+            
+            with open(filepath, 'r') as f:
+                content = f.read()
+            
+            st.download_button(
+                label=f"⬇️ Descargar {selected_file}",
+                data=content,
+                file_name=selected_file,
+                mime="application/json"
+            )
+            
+            # Mostrar info del archivo
+            gdf = gpd.read_file(filepath)
+            st.caption(f"📊 {len(gdf)} registros | {filepath.stat().st_size/1024:.1f} KB")
+        else:
+            st.warning("No hay archivos GeoJSON en data/raw")
     else:
-        st.info("No hay modelos guardados. Ejecuta el notebook de ML primero.")
-else:
-    st.info("Directorio de modelos no encontrado.")
+        st.warning("Directorio de datos no encontrado")
+
+
+# =============================================================================
+# SECCIÓN 2: MAPAS Y FIGURAS
+# =============================================================================
 
 st.markdown("---")
+st.header("2. Mapas y Figuras")
 
-# ============================================================================
-# SECCIÓN 4: VISUALIZACIONES
-# ============================================================================
-st.header("Visualizaciones y Mapas")
+outputs_path = Path("/outputs")
+if not outputs_path.exists():
+    outputs_path = Path("../outputs")
 
-figures_dir = OUTPUTS / "figures"
-if figures_dir.exists():
-    image_files = list(figures_dir.glob("*.png"))
+if outputs_path.exists():
+    # Buscar imágenes
+    image_files = list(outputs_path.glob("*.png")) + list(outputs_path.glob("*.jpg"))
     
     if image_files:
-        st.markdown(f"**{len(image_files)} visualizaciones disponibles**")
+        cols = st.columns(3)
         
-        # Selector de imagen
-        selected_img = st.selectbox(
-            "Selecciona una visualización:",
-            options=image_files,
-            format_func=lambda x: x.stem.replace("_", " ").title()
-        )
-        
-        if selected_img:
-            col1, col2 = st.columns([2, 1])
+        for idx, img_file in enumerate(image_files[:9]):  # Máximo 9 imágenes
+            col_idx = idx % 3
             
-            with col1:
-                st.image(str(selected_img), use_container_width=True)
-            
-            with col2:
-                st.markdown(f"**Archivo:** `{selected_img.name}`")
-                st.markdown(f"**Tamaño:** {selected_img.stat().st_size / 1024:.1f} KB")
+            with cols[col_idx]:
+                st.image(str(img_file), caption=img_file.name, use_container_width=True)
                 
-                with open(selected_img, "rb") as f:
-                    st.download_button(
-                        label="Descargar Imagen",
-                        data=f,
-                        file_name=selected_img.name,
-                        mime="image/png"
-                    )
+                with open(img_file, 'rb') as f:
+                    img_bytes = f.read()
+                
+                st.download_button(
+                    label=f"⬇️ {img_file.name}",
+                    data=img_bytes,
+                    file_name=img_file.name,
+                    mime="image/png",
+                    key=f"img_{idx}"
+                )
     else:
-        st.info("No hay visualizaciones guardadas.")
+        st.info("No hay imágenes en el directorio outputs/")
 else:
-    st.info("Directorio de figuras no encontrado.")
+    st.warning("Directorio outputs/ no encontrado")
+
+
+# =============================================================================
+# SECCIÓN 3: REPORTES Y ESTADÍSTICAS
+# =============================================================================
 
 st.markdown("---")
-
-# ============================================================================
-# SECCIÓN 5: REPORTES
-# ============================================================================
-st.header("Reportes y Documentacion")
+st.header("3. Reportes y Estadísticas")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Documentación Técnica")
+    st.subheader("📊 Estadísticas Generales")
     
-    docs_files = [
-        ("README.md", "Guía General del Proyecto"),
-        ("docs/arquitectura.md", "Arquitectura del Sistema"),
-        ("docs/guia_usuario.md", "Guía de Usuario"),
-        ("docs/topographic_integration.md", "Integración DEM")
-    ]
-    
-    for file_path, description in docs_files:
-        full_path = BASE_DIR / file_path
-        if full_path.exists():
-            with open(full_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                st.download_button(
-                    label=f"{description}",
-                    data=content,
-                    file_name=full_path.name,
-                    mime="text/markdown"
-                )
+    if st.button("Generar Reporte de Estadísticas"):
+        try:
+            # Cargar datos
+            buildings = gpd.read_file(data_path / "isla_de_pascua_buildings.geojson")
+            buildings_utm = buildings.to_crs("EPSG:32712")
+            buildings_utm['area_m2'] = buildings_utm.geometry.area
+            
+            streets = gpd.read_file(data_path / "isla_de_pascua_streets.geojson")
+            
+            # Crear reporte
+            stats = {
+                "Metrica": [
+                    "Total Edificaciones",
+                    "Área Total Construida (ha)",
+                    "Área Promedio Edificio (m²)",
+                    "Total Calles",
+                    "Red Vial (km)"
+                ],
+                "Valor": [
+                    len(buildings_utm),
+                    round(buildings_utm['area_m2'].sum() / 10000, 2),
+                    round(buildings_utm['area_m2'].mean(), 2),
+                    len(streets),
+                    "N/A"  # Calcular si es necesario
+                ]
+            }
+            
+            df_stats = pd.DataFrame(stats)
+            st.dataframe(df_stats)
+            
+            # Descargar
+            csv_stats = df_stats.to_csv(index=False)
+            st.download_button(
+                label="⬇️ Descargar estadisticas.csv",
+                data=csv_stats,
+                file_name="estadisticas_isla_pascua.csv",
+                mime="text/csv"
+            )
+            
+        except Exception as e:
+            st.error(f"Error generando reporte: {e}")
 
 with col2:
-    st.subheader("Informe Técnico")
+    st.subheader("📄 Archivos Adicionales")
     
-    informe_tex = BASE_DIR / "docs" / "informe_tecnico.tex"
-    if informe_tex.exists():
-        with open(informe_tex, "r", encoding="utf-8") as f:
+    # Buscar CSVs y otros archivos
+    csv_files = list(outputs_path.glob("*.csv")) if outputs_path.exists() else []
+    json_files = list(outputs_path.glob("*.json")) if outputs_path.exists() else []
+    
+    all_files = csv_files + json_files
+    
+    if all_files:
+        for f in all_files[:5]:
+            with open(f, 'r') as file:
+                content = file.read()
+            
             st.download_button(
-                label="Informe LaTeX",
-                data=f,
-                file_name="informe_tecnico.tex",
-                mime="text/plain"
+                label=f"⬇️ {f.name}",
+                data=content,
+                file_name=f.name,
+                mime="text/csv" if f.suffix == ".csv" else "application/json",
+                key=f"file_{f.name}"
             )
-    
-    st.info("Compila el archivo .tex con pdflatex para generar el PDF")
+    else:
+        st.info("No hay archivos CSV/JSON adicionales")
+
+
+# =============================================================================
+# SECCIÓN 4: API REST
+# =============================================================================
 
 st.markdown("---")
-
-# ============================================================================
-# SECCIÓN 6: PAQUETE COMPLETO
-# ============================================================================
-st.header("Descarga Completa")
+st.header("4. Acceso API REST")
 
 st.markdown("""
-**Nota:** Para descargar el proyecto completo, clona el repositorio Git o descarga el ZIP desde GitHub.
+El proyecto incluye una API REST para acceso programático a los datos.
+
+**Endpoints disponibles:**
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/tables` | Lista todas las tablas |
+| GET | `/api/data/{tabla}` | Obtiene datos de una tabla |
+| GET | `/api/stats/{tabla}` | Estadísticas de una tabla |
+| POST | `/api/predict` | Predicción de densidad |
+| GET | `/api/health` | Estado de la API |
+
+**Ejemplo de uso con Python:**
+```python
+import requests
+
+# Listar tablas
+response = requests.get("http://localhost:8000/api/tables")
+tables = response.json()
+
+# Obtener datos
+response = requests.get("http://localhost:8000/api/data/area_construcciones?limit=100")
+data = response.json()
+
+# Predicción
+response = requests.post("http://localhost:8000/api/predict", 
+                         json={"x": -109.43, "y": -27.15})
+prediction = response.json()
+```
+
+**Documentación interactiva:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 """)
 
-st.code("""
-# Clonar repositorio
-git clone [URL_DEL_REPOSITORIO]
 
-# O descargar como ZIP
-# Desde GitHub: Code → Download ZIP
-""", language="bash")
-
-# ============================================================================
+# =============================================================================
 # FOOTER
-# ============================================================================
+# =============================================================================
+
 st.markdown("---")
-st.caption("Sistema de Análisis Territorial - Isla de Pascua | Laboratorio Integrador 2025")
+st.caption("Centro de Descargas - Sistema de Análisis Territorial | Laboratorio Integrador 2025")

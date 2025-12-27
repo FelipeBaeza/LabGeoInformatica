@@ -18,9 +18,17 @@ sys.path.append(str(__file__).replace('/app/pages/07_Geoestadistica.py', '/scrip
 # Configuracion
 st.set_page_config(page_title="Geoestadistica", layout="wide")
 st.title("Analisis Geoestadistico")
+
+st.markdown("""
+La **geoestadistica** estudia como varian los fenomenos en el espacio. En este modulo analizamos 
+la densidad de edificaciones usando **semivariogramas** (graficos que muestran como cambia la 
+similitud entre zonas a diferentes distancias) y **Kriging** (un metodo de interpolacion que 
+estima valores en lugares donde no tenemos datos directos). Estas tecnicas son fundamentales 
+para entender patrones espaciales y hacer predicciones.
+""")
 st.markdown("---")
 
-CRS_UTM = 'EPSG:32719'
+CRS_UTM = 'EPSG:32712'  # UTM zona 12S para Isla de Pascua
 
 DB_CONFIG = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),

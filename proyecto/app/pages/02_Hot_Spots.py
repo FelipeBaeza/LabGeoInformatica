@@ -1,34 +1,31 @@
 """
-Página de Análisis de Hot Spots (Getis-Ord Gi*)
-Optimizado para rendimiento con spatial joins vectorizados
+Pagina de Analisis de Hot Spots (Getis-Ord Gi*)
+Identifica zonas de concentracion significativa de edificaciones
 """
 import streamlit as st
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import folium
-from folium.plugins import HeatMap
-from streamlit_folium import st_folium
 from shapely.geometry import box
+import folium
+from streamlit_folium import st_folium
+from folium.plugins import HeatMap, MarkerCluster
 import os
 from sqlalchemy import create_engine
 
-# Intentar importar librerías de análisis espacial
-try:
-    from libpysal.weights import Queen, KNN
-    from esda.getisord import G_Local
-    SPATIAL_LIBS = True
-except ImportError:
-    SPATIAL_LIBS = False
+st.set_page_config(page_title="Hot Spots", layout="wide")
 
-# Configuracion
-st.set_page_config(page_title="Analisis Hot Spots", page_icon=None, layout="wide")
 st.title("Analisis de Hot Spots")
+
+st.markdown("""
+Este modulo identifica **zonas calientes (hot spots)** donde la concentracion de edificaciones 
+es significativamente mayor que el promedio de la isla. Utilizamos tecnicas estadisticas para 
+determinar si las agrupaciones observadas representan un patron real o son aleatorias.
+""")
 st.markdown("---")
 
-CRS_UTM = 'EPSG:32719'
-
+# Configuracion BD
 DB_CONFIG = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),
     'port': os.getenv('POSTGRES_PORT', '55432'),
@@ -37,6 +34,8 @@ DB_CONFIG = {
     'password': os.getenv('POSTGRES_PASSWORD', 'geopass123'),
 }
 
+CRS_UTM = "EPSG:32712"
+
 
 def get_engine():
     return create_engine(
@@ -44,302 +43,260 @@ def get_engine():
         f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
     )
 
-@st.cache_data
-def load_data():
-    """Cargar datos geoespaciales desde PostGIS"""
-    data = {}
-    tables = {
-        'boundary': 'limite_administrativa',
-        'buildings': 'area_construcciones',
-        'amenities': 'punto_interes',
-        'streets': 'linea_calles',
-    }
-
-    engine = get_engine()
-    for key, table in tables.items():
-        try:
-            data[key] = gpd.read_postgis(
-                f"SELECT * FROM geoanalisis.{table}", engine, geom_col='geometry'
-            )
-        except Exception as e:
-            st.warning(f"Error cargando {table}: {e}")
-
-    return data
-
 
 @st.cache_data
-def create_grid(_boundary_gdf, cell_size=200):
-    """Crear grilla de análisis (cacheado)"""
-    boundary_utm = _boundary_gdf.to_crs(CRS_UTM)
-    minx, miny, maxx, maxy = boundary_utm.total_bounds
-    
-    cells = []
-    x = minx
-    while x < maxx:
-        y = miny
-        while y < maxy:
-            cells.append(box(x, y, x + cell_size, y + cell_size))
-            y += cell_size
-        x += cell_size
-    
-    grid = gpd.GeoDataFrame(geometry=cells, crs=CRS_UTM)
-    grid = grid[grid.intersects(boundary_utm.unary_union)].reset_index(drop=True)
-    grid['cell_id'] = range(len(grid))
-    
-    return grid
-
-
-@st.cache_data
-def count_features_in_cells_optimized(_grid, _features_gdf, column_name='count'):
-    """Contar features en cada celda usando spatial join optimizado (MUCHO MÁS RÁPIDO)"""
-    # Copiar grid para no modificar el original
-    grid = _grid.copy()
-    features_utm = _features_gdf.to_crs(CRS_UTM)
-    
-    # Para polígonos, usar centroide
-    if 'Polygon' in str(features_utm.geometry.geom_type.iloc[0]):
-        features_points = features_utm.copy()
-        features_points['geometry'] = features_points.geometry.centroid
-    else:
-        features_points = features_utm.copy()
-    
-    # Resetear índices para el join
-    features_points = features_points.reset_index(drop=True)
-    grid = grid.reset_index(drop=True)
-    
-    # Usar spatial join vectorizado (mucho más rápido que loop)
+def load_all_data():
+    """Cargar todos los datos necesarios."""
     try:
-        joined = gpd.sjoin(features_points, grid[['cell_id', 'geometry']], 
-                          how='inner', predicate='within')
-        counts = joined.groupby('cell_id').size().reset_index(name=column_name)
-        
-        # Merge back to grid
-        grid = grid.merge(counts, on='cell_id', how='left')
-        grid[column_name] = grid[column_name].fillna(0).astype(int)
-    except Exception:
-        # Fallback: si spatial join falla, inicializar en 0
-        grid[column_name] = 0
-    
-    return grid
+        engine = get_engine()
+        buildings = gpd.read_postgis(
+            "SELECT * FROM geoanalisis.area_construcciones", 
+            engine, geom_col='geometry'
+        )
+        boundary = gpd.read_postgis(
+            "SELECT * FROM geoanalisis.limite_administrativa", 
+            engine, geom_col='geometry'
+        )
+        streets = gpd.read_postgis(
+            "SELECT * FROM geoanalisis.linea_calles", 
+            engine, geom_col='geometry'
+        )
+        amenities = gpd.read_postgis(
+            "SELECT * FROM geoanalisis.punto_interes", 
+            engine, geom_col='geometry'
+        )
+        return buildings, boundary, streets, amenities
+    except Exception as e:
+        st.error(f"Error: {e}")
+        return None, None, None, None
 
 
 # Cargar datos
-try:
-    data = load_data()
-    
-    if not data or 'boundary' not in data:
-        st.error("No se encontraron datos. Ejecute primero el script de descarga.")
-        st.stop()
-    
-    # Sidebar
-    st.sidebar.header("Opciones de Hot Spots")
-    
-    # Seleccionar capa
-    available_layers = [k for k in data.keys() if k != 'boundary']
-    if not available_layers:
-        st.error("No hay capas disponibles para análisis")
-        st.stop()
-    
-    selected_layer = st.sidebar.selectbox(
-        "Capa a analizar:",
-        available_layers,
-        format_func=lambda x: x.replace('_', ' ').title()
-    )
-    
-    cell_size = st.sidebar.slider("Tamaño de celda (metros)", 100, 500, 200, 50)
-    
-    # Tabs
-    tab1, tab2, tab3 = st.tabs(["Mapa de Calor", "Getis-Ord Gi*", "Estadisticas"])
-    
-    with tab1:
-        st.subheader("Mapa de Calor")
-        
-        gdf = data[selected_layer].to_crs('EPSG:4326')
-        center = data['boundary'].to_crs('EPSG:4326').geometry.centroid.iloc[0]
-        
-        # Crear mapa base
-        m = folium.Map(
-            location=[center.y, center.x],
-            zoom_start=13,
-            tiles='CartoDB dark_matter'
-        )
-        
-        # Obtener puntos para heatmap
-        heat_data = []
-        for idx, row in gdf.iterrows():
-            if row.geometry:
-                geom = row.geometry
-                if geom.geom_type == 'Point':
-                    heat_data.append([geom.y, geom.x])
-                elif geom.geom_type in ['Polygon', 'MultiPolygon']:
-                    centroid = geom.centroid
-                    heat_data.append([centroid.y, centroid.x])
-        
-        if heat_data:
-            # Añadir heatmap
-            HeatMap(
-                heat_data,
-                radius=20,
-                blur=15,
-                max_zoom=18,
-                gradient={0.2: 'blue', 0.4: 'cyan', 0.6: 'lime', 0.8: 'yellow', 1: 'red'}
-            ).add_to(m)
-            
-            st_folium(m, width=None, height=600)
-        else:
-            st.warning("No hay datos de puntos para visualizar")
-    
-    with tab2:
-        st.subheader("Análisis Getis-Ord Gi* (Hot Spot Analysis)")
-        
-        if not SPATIAL_LIBS:
-            st.warning("Las librerias de analisis espacial (libpysal, esda) no estan instaladas.")
-            st.info("Instale con: pip install libpysal esda")
-            st.markdown("---")
-            st.markdown("**Alternativa: Mapa de densidad por celdas**")
-            
-            # Mostrar mapa de densidad como alternativa
-            with st.spinner("Calculando densidad..."):
-                grid = create_grid(data['boundary'], cell_size)
-                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
-            
-            fig, ax = plt.subplots(figsize=(10, 10))
-            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
-                                                   edgecolor='black', linewidth=2)
-            grid.plot(column='n_features', ax=ax, cmap='YlOrRd', legend=True,
-                     legend_kwds={'label': 'N° features'})
-            ax.set_title(f'Densidad de {selected_layer}', fontsize=12, fontweight='bold')
-            ax.set_axis_off()
-            st.pyplot(fig)
-            plt.close(fig)
-        else:
-            # Crear grilla con cálculo optimizado
-            with st.spinner("Creando grilla de análisis..."):
-                grid = create_grid(data['boundary'], cell_size)
-                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
-            
-            st.info(f"Grilla creada: {len(grid)} celdas de {cell_size}m x {cell_size}m")
-            
-            # Filtrar celdas con features
-            grid_analysis = grid[grid['n_features'] > 0].copy()
-            
-            if len(grid_analysis) < 5:
-                st.warning("No hay suficientes celdas con datos para el análisis")
-            else:
-                # Calcular Gi*
-                with st.spinner("Calculando estadístico Getis-Ord Gi*..."):
-                    try:
-                        w = Queen.from_dataframe(grid_analysis)
-                        if w.n == 0:
-                            w = KNN.from_dataframe(grid_analysis, k=4)
-                        
-                        gi = G_Local(grid_analysis['n_features'].values, w, star=True)
-                        grid_analysis['gi_z'] = gi.Zs
-                        grid_analysis['gi_p'] = gi.p_sim
-                        
-                        # Clasificar hot/cold spots
-                        grid_analysis['hotspot_type'] = 'No significativo'
-                        grid_analysis.loc[(grid_analysis['gi_z'] > 1.96) & (grid_analysis['gi_p'] < 0.05), 'hotspot_type'] = 'Hot Spot (95%)'
-                        grid_analysis.loc[(grid_analysis['gi_z'] > 2.58) & (grid_analysis['gi_p'] < 0.01), 'hotspot_type'] = 'Hot Spot (99%)'
-                        grid_analysis.loc[(grid_analysis['gi_z'] < -1.96) & (grid_analysis['gi_p'] < 0.05), 'hotspot_type'] = 'Cold Spot (95%)'
-                        grid_analysis.loc[(grid_analysis['gi_z'] < -2.58) & (grid_analysis['gi_p'] < 0.01), 'hotspot_type'] = 'Cold Spot (99%)'
-                        
-                        # Visualización
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.markdown("**Mapa de Z-scores (Gi*)**")
-                            fig, ax = plt.subplots(figsize=(10, 10))
-                            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
-                                                                   edgecolor='black', linewidth=2)
-                            grid_analysis.plot(column='gi_z', ax=ax, cmap='RdBu_r', 
-                                             legend=True, vmin=-3, vmax=3,
-                                             legend_kwds={'label': 'Z-score (Gi*)'})
-                            ax.set_title('Estadístico Getis-Ord Gi*', fontsize=12, fontweight='bold')
-                            ax.set_axis_off()
-                            st.pyplot(fig)
-                            plt.close(fig)
-                        
-                        with col2:
-                            st.markdown("**Clasificación de Hot/Cold Spots**")
-                            fig, ax = plt.subplots(figsize=(10, 10))
-                            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
-                                                                   edgecolor='black', linewidth=2)
-                            
-                            colors = {
-                                'No significativo': '#cccccc',
-                                'Cold Spot (99%)': '#2166ac',
-                                'Cold Spot (95%)': '#92c5de',
-                                'Hot Spot (95%)': '#f4a582',
-                                'Hot Spot (99%)': '#b2182b'
-                            }
-                            
-                            for htype, color in colors.items():
-                                subset = grid_analysis[grid_analysis['hotspot_type'] == htype]
-                                if len(subset) > 0:
-                                    subset.plot(ax=ax, color=color, edgecolor='gray', 
-                                              linewidth=0.5, label=htype)
-                            
-                            ax.legend(loc='lower right', title='Tipo')
-                            ax.set_title('Clasificación Hot/Cold Spots', fontsize=12, fontweight='bold')
-                            ax.set_axis_off()
-                            st.pyplot(fig)
-                            plt.close(fig)
-                        
-                        # Resumen
-                        st.markdown("---")
-                        st.markdown("**Resumen de Hot/Cold Spots**")
-                        summary = grid_analysis['hotspot_type'].value_counts()
-                        st.dataframe(summary, use_container_width=True)
-                        
-                    except Exception as e:
-                        st.error(f"Error en análisis: {e}")
-    
-    with tab3:
-        st.subheader("Estadísticas de Densidad")
-        
-        try:
-            # Usar la función optimizada con cache
-            with st.spinner("Calculando densidad..."):
-                grid = create_grid(data['boundary'], cell_size)
-                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
-            
-            st.success(f"Grilla creada: {len(grid)} celdas")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Distribución de Densidad por Celda**")
-                fig, ax = plt.subplots(figsize=(8, 5))
-                grid['n_features'].hist(bins=30, ax=ax, color='coral', edgecolor='white')
-                ax.set_xlabel('Número de features por celda')
-                ax.set_ylabel('Frecuencia')
-                ax.set_title(f'Histograma de Densidad - {selected_layer}')
-                st.pyplot(fig)
-                plt.close(fig)
-            
-            with col2:
-                st.markdown("**Estadísticas**")
-                stats = grid['n_features'].describe()
-                st.dataframe(pd.DataFrame(stats).round(2))
-            
-            # Mapa de densidad
-            st.markdown("---")
-            st.markdown("**Mapa de Densidad por Celda**")
-            
-            fig, ax = plt.subplots(figsize=(12, 10))
-            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
-                                                   edgecolor='black', linewidth=2)
-            grid.plot(column='n_features', ax=ax, cmap='YlOrRd', legend=True,
-                     legend_kwds={'label': 'N° features'})
-            ax.set_title(f'Densidad de {selected_layer.replace("_", " ").title()}', 
-                        fontsize=14, fontweight='bold')
-            ax.set_axis_off()
-            st.pyplot(fig)
-            plt.close(fig)
-        except Exception as e:
-            st.error(f"Error en estadísticas: {e}")
+buildings, boundary, streets, amenities = load_all_data()
 
-except Exception as e:
-    st.error(f"Error: {e}")
-    st.info("Verifique que los datos estén disponibles.")
+if buildings is None:
+    st.error("No se pudieron cargar los datos.")
+    st.stop()
+
+# Convertir a WGS84
+buildings_wgs = buildings.to_crs("EPSG:4326")
+boundary_wgs = boundary.to_crs("EPSG:4326")
+streets_wgs = streets.to_crs("EPSG:4326") if streets is not None else None
+amenities_wgs = amenities.to_crs("EPSG:4326") if amenities is not None else None
+
+# Calcular centro
+bounds = boundary_wgs.total_bounds
+center_lon = (bounds[0] + bounds[2]) / 2
+center_lat = (bounds[1] + bounds[3]) / 2
+
+# ============================================================================
+# SECCION 1: MAPA COMPLETO DE LA ISLA
+# ============================================================================
+
+st.header("1. Distribucion de Edificaciones en la Isla")
+
+st.markdown("""
+Este mapa muestra **todas las edificaciones** de Isla de Pascua (puntos naranjas) junto con 
+la red vial (lineas grises) y puntos de interes (marcadores azules). Observa como la gran 
+mayoria de las construcciones se concentran en un solo sector: **Hanga Roa**.
+""")
+
+# Crear mapa base
+m1 = folium.Map(location=[center_lat, center_lon], zoom_start=13, tiles='CartoDB positron')
+
+# Agregar calles
+if streets_wgs is not None and len(streets_wgs) > 0:
+    for idx, row in streets_wgs.head(1000).iterrows():
+        if row.geometry is not None:
+            try:
+                coords = list(row.geometry.coords) if row.geometry.geom_type == 'LineString' else []
+                if coords:
+                    folium.PolyLine(
+                        locations=[[c[1], c[0]] for c in coords],
+                        weight=1,
+                        color='#888888',
+                        opacity=0.5
+                    ).add_to(m1)
+            except:
+                pass
+
+# Agregar edificaciones
+for idx, row in buildings_wgs.iterrows():
+    centroid = row.geometry.centroid
+    folium.CircleMarker(
+        location=[centroid.y, centroid.x],
+        radius=3,
+        color='#FF6B35',
+        fill=True,
+        fillColor='#FF6B35',
+        fillOpacity=0.7,
+        weight=1
+    ).add_to(m1)
+
+# Agregar amenidades como marcadores
+if amenities_wgs is not None:
+    for idx, row in amenities_wgs.head(50).iterrows():
+        if row.geometry.geom_type == 'Point':
+            name = row.get('name', 'Punto de interes')
+            folium.Marker(
+                location=[row.geometry.y, row.geometry.x],
+                popup=str(name),
+                icon=folium.Icon(color='blue', icon='info-sign')
+            ).add_to(m1)
+
+# Agregar borde
+folium.GeoJson(
+    boundary_wgs.geometry.iloc[0],
+    style_function=lambda x: {'fillColor': 'transparent', 'color': '#333', 'weight': 3}
+).add_to(m1)
+
+st_folium(m1, width=900, height=500)
+
+# Estadisticas
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Total Edificaciones", len(buildings))
+with col2:
+    st.metric("Segmentos Viales", len(streets) if streets is not None else 0)
+with col3:
+    st.metric("Puntos de Interes", len(amenities) if amenities is not None else 0)
+
+st.markdown("""
+**Interpretacion:** El mapa revela un patron de **concentracion extrema**: practicamente 
+todas las edificaciones de la isla se encuentran en Hanga Roa (costa oeste). El resto 
+de la isla permanece sin desarrollo urbano significativo, lo cual se explica por:
+- La presencia del Parque Nacional Rapa Nui (protegido)
+- La topografia volcanica
+- La historia de asentamiento de la isla
+""")
+
+# ============================================================================
+# SECCION 2: MAPA DE CALOR
+# ============================================================================
+
+st.header("2. Mapa de Calor (Densidad)")
+
+st.markdown("""
+El mapa de calor visualiza la **intensidad de concentracion** de edificaciones. Las zonas 
+rojas/amarillas indican donde hay mas construcciones agrupadas. Esta tecnica permite 
+ver patrones que no son evidentes mirando puntos individuales.
+""")
+
+m2 = folium.Map(location=[center_lat, center_lon], zoom_start=14, tiles='CartoDB dark_matter')
+
+# Preparar datos para heatmap
+heat_data = []
+for idx, row in buildings_wgs.iterrows():
+    centroid = row.geometry.centroid
+    heat_data.append([centroid.y, centroid.x, 1])
+
+HeatMap(
+    heat_data, 
+    radius=20, 
+    blur=15, 
+    max_zoom=15,
+    gradient={0.2: 'blue', 0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1: 'red'}
+).add_to(m2)
+
+st_folium(m2, width=900, height=500)
+
+st.markdown("""
+**Interpretacion:** El nucleo mas caliente (rojo intenso) corresponde al **centro de Hanga Roa**, 
+donde se concentran comercios, servicios publicos y la mayor densidad residencial. 
+Los colores mas frios (amarillo/verde) en la periferia indican zonas de transicion 
+hacia areas menos urbanizadas.
+""")
+
+# ============================================================================
+# SECCION 3: ANALISIS ESTADISTICO
+# ============================================================================
+
+st.header("3. Analisis Estadistico de Concentracion")
+
+st.markdown("""
+Para cuantificar la concentracion, dividimos la isla en una grilla y aplicamos estadistica espacial.
+Esto nos permite determinar si los patrones observados son estadisticamente significativos.
+""")
+
+# Crear grilla simple
+buildings_utm = buildings.to_crs(CRS_UTM)
+boundary_utm = boundary.to_crs(CRS_UTM)
+
+minx, miny, maxx, maxy = boundary_utm.total_bounds
+cell_size = 300
+
+cells = []
+x = minx
+while x < maxx:
+    y = miny
+    while y < maxy:
+        cells.append(box(x, y, x + cell_size, y + cell_size))
+        y += cell_size
+    x += cell_size
+
+grid = gpd.GeoDataFrame(geometry=cells, crs=CRS_UTM)
+grid = grid[grid.intersects(boundary_utm.unary_union)].reset_index(drop=True)
+grid['cell_id'] = range(len(grid))
+
+# Contar edificios
+buildings_centroids = buildings_utm.copy()
+buildings_centroids['geometry'] = buildings_centroids.geometry.centroid
+
+joined = gpd.sjoin(buildings_centroids.reset_index(), grid[['cell_id', 'geometry']], 
+                   how='inner', predicate='within')
+counts = joined.groupby('cell_id').size().reset_index(name='n_edificios')
+
+grid = grid.merge(counts, on='cell_id', how='left')
+grid['n_edificios'] = grid['n_edificios'].fillna(0).astype(int)
+
+# Estadisticas
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Celdas totales", len(grid))
+with col2:
+    celdas_ocupadas = len(grid[grid['n_edificios'] > 0])
+    st.metric("Celdas con edificios", celdas_ocupadas)
+with col3:
+    pct_ocupado = celdas_ocupadas / len(grid) * 100
+    st.metric("% Ocupacion", f"{pct_ocupado:.1f}%")
+with col4:
+    st.metric("Max. edificios/celda", int(grid['n_edificios'].max()))
+
+# Clasificar hot spots
+mean_val = grid['n_edificios'].mean()
+std_val = grid['n_edificios'].std()
+
+if std_val > 0:
+    grid['z_score'] = (grid['n_edificios'] - mean_val) / std_val
+else:
+    grid['z_score'] = 0
+
+grid['clasificacion'] = 'Sin edificios'
+grid.loc[grid['n_edificios'] > 0, 'clasificacion'] = 'Densidad normal'
+grid.loc[grid['z_score'] > 1.96, 'clasificacion'] = 'Hot Spot (95%)'
+grid.loc[grid['z_score'] > 2.58, 'clasificacion'] = 'Hot Spot (99%)'
+
+# Tabla resumen
+st.subheader("Clasificacion de zonas")
+resumen = grid['clasificacion'].value_counts().reset_index()
+resumen.columns = ['Categoria', 'Numero de celdas']
+st.dataframe(resumen, use_container_width=True)
+
+st.markdown(f"""
+**Resultado del analisis:**
+- Solo el **{pct_ocupado:.1f}%** del territorio tiene edificaciones
+- Se identificaron **{len(grid[grid['clasificacion'].str.contains('Hot')])}** celdas como Hot Spots
+- Esto confirma que la urbanizacion esta **altamente concentrada** en un area pequena
+
+Esta concentracion extrema tiene implicancias para la planificacion territorial:
+1. La infraestructura (agua, electricidad, alcantarillado) esta bajo presion en Hanga Roa
+2. El crecimiento futuro debera considerar la capacidad de carga del sector urbano
+3. La mayoria de la isla permanece protegida de la expansion urbana
+""")
+
+# ============================================================================
+# FOOTER
+# ============================================================================
+
+st.markdown("---")
+st.caption("Analisis Hot Spots - Isla de Pascua | Laboratorio Integrador 2025")

@@ -143,10 +143,6 @@ def create_map(gdf, column=None, style='default'):
         tiles='CartoDB positron'
     )
     
-    # Agregar capas de tiles alternativas
-    folium.TileLayer('OpenStreetMap').add_to(m)
-    folium.TileLayer('CartoDB dark_matter').add_to(m)
-    
     # Determinar tipo de geometría
     geom_type = gdf.geometry.iloc[0].geom_type
     
@@ -180,9 +176,6 @@ def create_map(gdf, column=None, style='default'):
                 aliases=list(gdf.columns[:5])
             )
         ).add_to(m)
-    
-    # Agregar control de capas
-    folium.LayerControl().add_to(m)
     
     return m
 
@@ -267,30 +260,22 @@ def page_map_viewer():
         # Selección de fuente de datos
         data_source = st.radio(
             "Fuente de datos",
-            ["PostGIS", "Archivo GeoJSON"]
+            ["PostGIS"]
         )
         
-        if data_source == "PostGIS":
-            tables = get_available_tables()
-            if tables:
-                selected_table = st.selectbox("Seleccionar capa", tables)
-            else:
-                st.warning("No hay tablas disponibles")
-                return
+        tables = get_available_tables()
+        if tables:
+            selected_table = st.selectbox("Seleccionar capa", tables)
         else:
-            uploaded_file = st.file_uploader(
-                "Cargar GeoJSON",
-                type=['geojson', 'json']
-            )
+            st.warning("No hay tablas disponibles")
+            return
     
     # Cargar datos
     gdf = None
     
-    if data_source == "PostGIS" and 'selected_table' in locals():
+    if 'selected_table' in locals():
         with st.spinner("Cargando datos..."):
             gdf = load_geodata(selected_table)
-    elif data_source == "Archivo GeoJSON" and uploaded_file:
-        gdf = gpd.read_file(uploaded_file)
     
     if gdf is not None and not gdf.empty:
         # Información de la capa
@@ -303,11 +288,9 @@ def page_map_viewer():
             st.metric("CRS", str(gdf.crs))
         
         # Selección de columna para colorear
-        numeric_cols = gdf.select_dtypes(include=['float64', 'int64']).columns.tolist()
-        
         color_column = st.selectbox(
             "Colorear por:",
-            ["Ninguno"] + numeric_cols
+            ["Ninguno"]
         )
         
         # Crear y mostrar mapa
@@ -382,9 +365,9 @@ def page_spatial_analysis():
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.plotly_chart(fig_hist, use_container_width=True)
+                    st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False})
                 with col2:
-                    st.plotly_chart(fig_box, use_container_width=True)
+                    st.plotly_chart(fig_box, use_container_width=True, config={'displayModeBar': False})
 
 
 def page_about():
@@ -418,8 +401,77 @@ def page_about():
     
     ---
     
-    **Universidad de Santiago de Chile** | Geoinformatica 2024
+    **Universidad de Santiago de Chile** | Geoinformatica 2025
     """)
+
+
+def page_visualizaciones():
+    """Página de visualizaciones y mapas."""
+    from pathlib import Path
+    
+    st.header("Visualizaciones y Mapas")
+    
+    # Definir rutas
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    OUTPUTS = BASE_DIR / "outputs"
+    
+    figures_dir = OUTPUTS / "figures"
+    if figures_dir.exists():
+        image_files = list(figures_dir.glob("*.png"))
+        
+        if image_files:
+            st.markdown(f"**{len(image_files)} visualizaciones disponibles**")
+            
+            # Selector de imagen
+            selected_img = st.selectbox(
+                "Selecciona una visualización:",
+                options=image_files,
+                format_func=lambda x: x.stem.replace("_", " ").title()
+            )
+            
+            if selected_img:
+                st.image(str(selected_img), use_container_width=True)
+
+                # Descripciones para cada visualización (clave: nombre del archivo sin extensión)
+                explanations = {
+                    'pca_biplot': (
+                        "El PCA Biplot muestra la proyección de observaciones y variables en los "
+                        "dos primeros componentes principales. En este proyecto ayuda a identificar "
+                        "cómo las variables topográficas y de servicios contribuyen a la variación "
+                        "en la densidad edificatoria y permite detectar agrupamientos espaciales."
+                    ),
+                    'pca_scree_plot': (
+                        "El Scree Plot de PCA muestra la varianza explicada por cada componente "
+                        "principal. Se usa para decidir cuántos componentes retener en el análisis "
+                        "de reducción de dimensionalidad aplicado a las características espaciales."
+                    ),
+                    '01_overview_datasets': (
+                        "Vista general de los datasets principales (edificaciones, calles, límites). "
+                        "Útil para entender la cobertura y calidad de los datos antes del análisis."
+                    ),
+                    '05_density_map': (
+                        "Mapa de densidad de edificaciones: muestra la concentración espacial de "
+                        "construcciones por celdas. Es clave para identificar zonas urbanizadas y "
+                        "priorizar intervenciones."
+                    ),
+                    'network_centrality_analysis': (
+                        "Análisis de centralidad de la red vial que identifica calles críticas "
+                        "para la conectividad. Ayuda a evaluar vulnerabilidades y accesibilidad."
+                    )
+                }
+
+                key = selected_img.stem.lower().replace(' ', '_')
+                desc = explanations.get(key)
+                if desc:
+                    st.markdown("**Descripción:**")
+                    st.write(desc)
+                else:
+                    # Mostrar una explicación genérica si no existe una específica
+                    st.info("Visualización seleccionada: muestra un resultado gráfico generado durante el análisis.")
+        else:
+            st.info("No hay visualizaciones guardadas.")
+    else:
+        st.info("Directorio de figuras no encontrado.")
 
 
 # ===== Main =====
@@ -434,6 +486,7 @@ def main():
         "Inicio": page_home,
         "Visor de Mapas": page_map_viewer,
         "Analisis Espacial": page_spatial_analysis,
+        "Visualizaciones": page_visualizaciones,
         "Acerca de": page_about
     }
     
@@ -444,8 +497,6 @@ def main():
     
     # Footer
     st.sidebar.markdown("---")
-    st.sidebar.markdown("**Analisis Territorial v1.0**")
-    st.sidebar.markdown("Geoinformatica 2024")
 
 
 if __name__ == "__main__":
