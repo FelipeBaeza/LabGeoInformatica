@@ -1,0 +1,27 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Introduccion: El Problema de Isla de Pascua}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Por que es un Problema}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Objetivo del Proyecto}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Los Datos: De Donde Viene la Informacion}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Que Datos Obtuvimos}{4}{subsection.2.1}%
+\contentsline {section}{\numberline {3}Metodologia: Como Analizamos los Datos}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Infraestructura Tecnologica}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Metodos de Analisis}{5}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}1. Analisis Exploratorio (ESDA)}{5}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}2. Deteccion de Zonas Calientes (Hot Spots)}{5}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}3. Geoestadistica}{6}{subsubsection.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.2.4}4. Aprendizaje Automatico (Machine Learning)}{6}{subsubsection.3.2.4}%
+\contentsline {section}{\numberline {4}Resultados Principales}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Patron de Concentracion Urbana}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Hot Spots Identificados}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Variables que Influyen en la Densidad}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Analisis de Redes}{7}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Aplicacion Web Interactiva}{8}{section.5}%
+\contentsline {section}{\numberline {6}Elementos de Excelencia}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Visualizacion 3D}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Analisis de Redes}{8}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Conclusiones}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Que Aprendimos}{8}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Utilidad Practica}{9}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Cumplimiento de Requisitos}{9}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Referencias}{9}{section.8}%

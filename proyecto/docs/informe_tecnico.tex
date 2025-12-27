@@ -5,85 +5,39 @@
 \geometry{margin=2.5cm}
 \usepackage{graphicx}
 \usepackage{float}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{enumerate}
+\usepackage{amsmath}
 \usepackage{xcolor}
 \usepackage{hyperref}
-\usepackage{tcolorbox}
 \usepackage{booktabs}
-\usepackage{longtable}
-\usepackage{array}
-\usepackage{multirow}
 \usepackage{fancyhdr}
-\usepackage{listings}
-\usepackage{tikz}
-\usetikzlibrary{shapes,arrows,positioning,calc}
-\usepackage{fontawesome5}
+\usepackage{caption}
+\usepackage{subcaption}
 
-% Configuración de encabezados
+% Configuracion de encabezados
 \pagestyle{fancy}
 \fancyhf{}
 \lhead{Laboratorio Integrador}
-\rhead{Geoinformática 2025}
+\rhead{Geoinformatica 2025}
 \cfoot{\thepage}
-
-% Comandos personalizados
-\newtcolorbox{taskbox}[2][]{
-    colback=blue!5!white,
-    colframe=blue!75!black,
-    title=#2,
-    fonttitle=\bfseries,
-    #1
-}
-
-\newtcolorbox{alertbox}[1][]{
-    colback=red!5!white,
-    colframe=red!75!black,
-    fonttitle=\bfseries,
-    #1
-}
-
-\newtcolorbox{deliverable}[2][]{
-    colback=yellow!5!white,
-    colframe=yellow!75!black,
-    title=#2,
-    fonttitle=\bfseries,
-    #1
-}
-
-% Configuración de listings para código
-\lstset{
-    basicstyle=\ttfamily\small,
-    breaklines=true,
-    frame=single,
-    language=Python,
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    keywordstyle=\color{blue},
-    commentstyle=\color{green!60!black},
-    stringstyle=\color{red}
-}
 
 \title{
     \vspace{-2cm}
     \Large{UNIVERSIDAD DE SANTIAGO DE CHILE} \\
-    \large{Facultad de Ingeniería} \\
-    \large{Departamento de Ingeniería Informática} \\
+    \large{Facultad de Ingenieria} \\
+    \large{Departamento de Ingenieria Informatica} \\
     \vspace{1cm}
-    \LARGE{\textbf{Sistema de Análisis Geoespacial Integral}} \\
-    \Large{\textbf{Isla de Pascua - Rapa Nui}} \\
+    \LARGE{\textbf{Analisis Territorial de Isla de Pascua}} \\
+    \Large{\textbf{Patrones de Ocupacion Urbana en Rapa Nui}} \\
     \vspace{0.5cm}
-    \large{Laboratorio Integrador - Geoinformática}
+    \large{Laboratorio Integrador - Geoinformatica}
 }
 
 \author{
     Felipe Baeza \\
     \texttt{felipe.baeza.m@usach.cl}
-    Catalina López \\
-    \texttt{catalina.lopez.a@usach.cl}
 }
 
-\date{\today}
+\date{Diciembre 2025}
 
 \begin{document}
 
@@ -95,766 +49,274 @@
 \newpage
 
 %==============================================================================
-\section{Resumen Ejecutivo}
+\section{Introduccion: El Problema de Isla de Pascua}
 %==============================================================================
 
-Este proyecto desarrolla un \textbf{Sistema de Análisis Geoespacial Integral} para Isla de Pascua (Rapa Nui), abordando el problema de la \textbf{presión demográfica} y la necesidad de monitorear la \textbf{capacidad de carga territorial} establecida por la Ley 21.070. El sistema combina técnicas de análisis espacial, geoestadística y machine learning sobre datos multi-fuente:
+Isla de Pascua, conocida tambien como Rapa Nui, es una pequena isla ubicada en medio del Oceano Pacifico, a mas de 3.700 kilometros de la costa de Chile continental. Es famosa mundialmente por sus estatuas gigantes de piedra llamadas \textbf{moais}, que fueron construidas por la antigua civilizacion Rapa Nui hace cientos de anos.
+
+Sin embargo, esta isla enfrenta un problema grave: \textbf{demasiada gente quiere vivir alli}. Entre los anos 2002 y 2017, la poblacion aumento en un 116\%, pasando de aproximadamente 3.800 a mas de 8.000 habitantes. Ademas, cada ano recibe mas de 150.000 turistas, lo que genera una enorme presion sobre los recursos limitados de la isla.
+
+\subsection{Por que es un Problema}
+
+Imaginemos que una casa esta disenada para que vivan 4 personas, pero de repente llegan 10. El agua no alcanza, la basura se acumula y todo se vuelve incomodo. Eso es exactamente lo que pasa en Isla de Pascua:
 
 \begin{itemize}
-    \item \textbf{Infraestructura containerizada} con Docker Compose (PostGIS + Jupyter + Streamlit)
-    \item \textbf{Base de datos espacial} PostGIS con 23 capas geográficas vectoriales
-    \item \textbf{Pipeline automatizado} de descarga y procesamiento de datos desde OpenStreetMap
-    \item \textbf{Análisis exploratorio espacial} (ESDA) con autocorrelación y hot spots
-    \item \textbf{Modelos de machine learning} para predicción de densidad edificatoria
-    \item \textbf{Aplicación web interactiva} con Streamlit para visualización de resultados
-    \item \textbf{Indicadores territoriales} alineados con el Modelo de Capacidad de Carga (MCCIP)
+    \item \textbf{Agua limitada}: La isla tiene un unico acuifero subterraneo que se esta agotando
+    \item \textbf{Basura acumulada}: Los sistemas de tratamiento de residuos estan al limite
+    \item \textbf{Construcciones sin control}: Las casas se construyen cada vez mas cerca de sitios arqueologicos protegidos
+    \item \textbf{Infraestructura saturada}: Calles, electricidad y servicios no dan abasto
 \end{itemize}
 
-El proyecto demuestra cómo la geoinformática puede contribuir a generar \textbf{evidencia territorial} para apoyar la implementación de políticas públicas en un territorio especial con desafíos únicos de sostenibilidad.
+\subsection{Objetivo del Proyecto}
+
+Este proyecto utiliza \textbf{tecnologia de analisis geografico} para estudiar como estan distribuidas las construcciones en la isla, identificar donde hay mayor concentracion de edificios, y crear herramientas que ayuden a las autoridades a tomar mejores decisiones sobre el uso del territorio.
+
+En terminos simples, creamos un ``mapa inteligente'' que no solo muestra donde estan las cosas, sino que tambien analiza patrones y puede predecir tendencias.
 
 %==============================================================================
-\section{Introducción}
+\section{Los Datos: De Donde Viene la Informacion}
 %==============================================================================
 
-\subsection{Contexto del Problema}
+Para realizar este analisis, necesitabamos informacion geografica detallada sobre la isla. Utilizamos una fuente de datos llamada \textbf{OpenStreetMap} (OSM), que es como un Wikipedia de mapas: personas de todo el mundo contribuyen mapeando calles, edificios y puntos de interes.
 
-Isla de Pascua (Rapa Nui) es un \textbf{Territorio Especial} de Chile ubicado en el Océano Pacífico, conocido mundialmente por sus moáis y su singular patrimonio cultural. Sin embargo, enfrenta desafíos críticos de planificación territorial reconocidos por la \textbf{Ley 21.070 (2018)}:
+\subsection{Que Datos Obtuvimos}
 
+\begin{table}[H]
+\centering
+\begin{tabular}{lrl}
+\toprule
+\textbf{Tipo de Dato} & \textbf{Cantidad} & \textbf{Para que Sirve} \\
+\midrule
+Edificaciones & 4,045 & Analizar densidad urbana \\
+Calles & 4,139 & Estudiar conectividad vial \\
+Puntos de interes & 241 & Ubicar servicios y comercios \\
+Limite de la isla & 1 & Definir area de estudio \\
+Areas verdes/playas & 12 & Contexto ambiental \\
+\bottomrule
+\end{tabular}
+\caption{Resumen de datos geograficos utilizados}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{01_overview_datasets.png}
+\caption{Vista general de los datos: se muestran las edificaciones (puntos naranjas), calles (lineas), y el limite de la isla}
+\end{figure}
+
+La figura anterior muestra como se distribuyen los distintos tipos de datos en el territorio. Podemos observar que la gran mayoria de las construcciones se concentran en un solo sector de la isla: el pueblo de \textbf{Hanga Roa}, ubicado en la costa oeste.
+
+%==============================================================================
+\section{Metodologia: Como Analizamos los Datos}
+%==============================================================================
+
+\subsection{Infraestructura Tecnologica}
+
+Para procesar toda esta informacion, creamos un \textbf{ambiente de trabajo reproducible} usando tecnologia llamada Docker. Esto significa que cualquier persona puede replicar exactamente nuestro analisis en su propia computadora.
+
+El sistema incluye:
 \begin{itemize}
-    \item \textbf{Crecimiento poblacional acelerado}: 116\% de aumento entre 2002-2017
-    \item \textbf{Presión turística}: Sobre 150.000 visitantes anuales pre-pandemia
-    \item \textbf{Saturación de infraestructura}: Sistemas de agua, alcantarillado y residuos al límite
-    \item \textbf{Expansión urbana descontrolada}: Desbordamiento hacia zonas arqueológicas protegidas
-    \item \textbf{Fragilidad ecosistémica}: Acuífero limitado con riesgo de salinización
-    \item \textbf{Escasez de herramientas de monitoreo}: Necesidad de indicadores territoriales cuantitativos
+    \item \textbf{Base de datos geografica} (PostGIS): Almacena los datos de forma eficiente
+    \item \textbf{Entorno de analisis} (Jupyter): Permite escribir codigo y visualizar resultados
+    \item \textbf{Aplicacion web} (Streamlit): Muestra los resultados de forma interactiva
 \end{itemize}
 
-\subsection{Justificación}
+\subsection{Metodos de Analisis}
 
-Este proyecto es relevante porque:
+Utilizamos cuatro tipos principales de analisis:
 
-\begin{enumerate}
-    \item \textbf{Aplicación práctica}: Genera información útil para planificación territorial
-    \item \textbf{Metodología replicable}: El pipeline puede adaptarse a otras comunas
-    \item \textbf{Tecnología de punta}: Demuestra uso de herramientas modernas (Docker, ML espacial)
-    \item \textbf{Datos abiertos}: Todo basado en OpenStreetMap y fuentes públicas
-    \item \textbf{Territorio único}: Rapa Nu i presenta características geográficas singulares
-\end{enumerate}
+\subsubsection{1. Analisis Exploratorio (ESDA)}
 
-\subsection{Objetivos}
+El primer paso fue entender como se distribuyen las edificaciones. Creamos una \textbf{grilla regular} sobre la isla, dividiendo el territorio en celdas de 200 metros por 200 metros, y contamos cuantos edificios habia en cada celda.
 
-\subsubsection{Objetivo General}
+Esto nos permitio crear mapas de densidad que muestran claramente donde hay mas y menos construcciones.
 
-Desarrollar un sistema integral de análisis geoespacial que permita caracterizar, analizar y visualizar patrones territoriales de Isla de Pascua mediante técnicas de ciencia de datos espaciales.
+\subsubsection{2. Deteccion de Zonas Calientes (Hot Spots)}
 
-\subsubsection{Objetivos Específicos}
+Utilizamos una tecnica estadistica llamada \textbf{Getis-Ord Gi*} para identificar zonas donde la concentracion de edificios es significativamente mayor que el promedio. Estas zonas se llaman ``hot spots'' (puntos calientes).
 
-\begin{enumerate}
-    \item \textbf{OE1}: Implementar infraestructura reproducible con Docker y PostGIS
-    \item \textbf{OE2}: Adquirir y procesar datos multi-fuente (vectorial OSM)
-    \item \textbf{OE3}: Realizar análisis exploratorio espacial (ESDA) con autocorrelación
-    \item \textbf{OE4}: Aplicar técnicas de detección de hot spots (Getis-Ord Gi*)
-    \item \textbf{OE5}: Desarrollar modelos predictivos de machine learning espacial
-    \item \textbf{OE6}: Crear aplicación web interactiva para exploración de resultados
-\end{enumerate}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{05_density_map.png}
+\caption{Mapa de densidad de edificaciones: los colores mas oscuros indican mayor concentracion de construcciones}
+\end{figure}
 
-\subsection{Preguntas de Investigación}
+\subsubsection{3. Geoestadistica}
 
-\begin{enumerate}
-    \item ¿Cuáles son los patrones de distribución espacial de edificaciones en Rapa Nui?
-    \item ¿Existen clusters significativos (hot spots) de densidad urbana?
-    \item ¿Qué variables espaciales predicen mejor la densidad edificatoria?
-    \item ¿Cómo se relaciona la infraestructura vial con la distribución de amenidades?
-    \item ¿Cómo puede la geoinformática contribuir al monitoreo de la capacidad de carga demográfica?
-\end{enumerate}
+Aplicamos tecnicas geoestadisticas como \textbf{semivariogramas} y \textbf{Kriging} para entender como varia la densidad de construcciones en el espacio y para crear predicciones en zonas donde no tenemos datos directos.
 
-%==============================================================================
-\section{Problema Territorial: Presión Demográfica}
-%==============================================================================
+El semivariograma nos dice que tan similares son las celdas cercanas entre si: en general, celdas cercanas tienen valores similares, y esta similitud disminuye con la distancia.
 
-\subsection{Contexto del Territorio Especial}
+\subsubsection{4. Aprendizaje Automatico (Machine Learning)}
 
-Isla de Pascua (Rapa Nui) constituye un \textbf{Territorio Especial} según la Constitución Política de Chile (Art. 126 bis), con características únicas que demandan una gestión territorial diferenciada:
-
+Entrenamos modelos de inteligencia artificial para predecir la densidad de edificaciones basandonos en caracteristicas del terreno como:
 \begin{itemize}
-    \item \textbf{Aislamiento extremo}: Ubicada a 3.700 km del continente, es uno de los territorios habitados más remotos del mundo
-    \item \textbf{Fragilidad ecológica}: Superficie limitada de 163,6 km² con ecosistemas insulares vulnerables
-    \item \textbf{Patrimonio cultural único}: Sitio Patrimonio de la Humanidad UNESCO desde 1995
-    \item \textbf{Población creciente}: Incremento sostenido de residentes y turistas que presionan la infraestructura
+    \item Distancia al centro de la isla
+    \item Cantidad de servicios cercanos (restaurantes, tiendas, etc.)
+    \item Longitud de calles en la zona
 \end{itemize}
 
-\subsection{Diagnóstico: Sobrecarga Demográfica}
+Los mejores resultados los obtuvimos con un modelo llamado \textbf{XGBoost}, que logro predecir correctamente el 88\% de la variacion en la densidad edificatoria.
 
-Según el \textbf{Modelo de Capacidad de Carga Demográfica (MCCIP)} desarrollado por el Instituto de Estudios Urbanos UC para SUBDERE, Isla de Pascua enfrenta una crisis de sostenibilidad territorial:
+%==============================================================================
+\section{Resultados Principales}
+%==============================================================================
+
+\subsection{Patron de Concentracion Urbana}
+
+El hallazgo mas importante es que \textbf{casi todas las construcciones de la isla estan en un solo lugar}: el pueblo de Hanga Roa, en la costa oeste. El 95\% de las edificaciones se concentran en menos del 10\% del territorio de la isla.
+
+Esto tiene implicancias importantes:
+\begin{itemize}
+    \item La presion sobre la infraestructura es muy localizada
+    \item El resto de la isla (donde estan los sitios arqueologicos) permanece relativamente protegido
+    \item Cualquier expansion urbana amenaza directamente las zonas patrimoniales
+\end{itemize}
+
+\subsection{Hot Spots Identificados}
+
+El analisis estadistico identifico tres zonas con concentracion significativa de edificaciones:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Zona} & \textbf{Nivel de Confianza} & \textbf{Caracteristica} \\
+\midrule
+Centro de Hanga Roa & 99\% & Centro comercial y turistico \\
+Sector residencial norte & 95\% & Viviendas familiares \\
+Sector residencial sur & 95\% & Viviendas y hospedajes \\
+\bottomrule
+\end{tabular}
+\caption{Zonas calientes (hot spots) identificadas}
+\end{table}
+
+\subsection{Variables que Influyen en la Densidad}
+
+El modelo de aprendizaje automatico nos mostro que factores determinan donde hay mas construcciones:
+
+\begin{enumerate}
+    \item \textbf{Distancia al centro} (28\% de influencia): Mientras mas lejos del centro, menos edificios hay
+    \item \textbf{Presencia de servicios} (22\%): Las construcciones se agrupan cerca de comercios y servicios
+    \item \textbf{Red vial} (33\%): Las zonas con mas calles tienen mas edificaciones
+    \item \textbf{Ubicacion geografica} (17\%): El sector oeste de la isla es mas urbanizado
+\end{enumerate}
+
+\subsection{Analisis de Redes}
+
+Tambien estudiamos como esta conectada la isla a traves de sus calles. Calculamos medidas de ``centralidad'' que indican que tan importante es cada calle para conectar diferentes partes de la isla.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{network_centrality_analysis.png}
+\caption{Analisis de la red vial: las calles de color mas intenso son mas importantes para la conectividad de la isla}
+\end{figure}
+
+Este analisis revela que la calle principal que atraviesa Hanga Roa es critica para la movilidad, y cualquier problema en ella afectaria significativamente el transito de toda la isla.
+
+%==============================================================================
+\section{Aplicacion Web Interactiva}
+%==============================================================================
+
+Creamos una aplicacion web que permite explorar todos estos resultados de forma interactiva. La aplicacion tiene 7 secciones:
 
 \begin{table}[H]
 \centering
 \begin{tabular}{ll}
 \toprule
-\textbf{Factor} & \textbf{Situación Crítica} \\
+\textbf{Seccion} & \textbf{Contenido} \\
 \midrule
-Crecimiento poblacional & Aumento del 116\% entre 2002-2017 (de 3.791 a 8.200 hab.) \\
-Flujo turístico & Sobre 150.000 visitantes anuales pre-pandemia \\
-Infraestructura & Saturación de agua, alcantarillado y residuos \\
-Expansión urbana & Desbordamiento hacia zonas arqueológicas \\
-Recursos hídricos & Acuífero limitado con riesgo de salinización \\
+1. Analisis Exploratorio & Estadisticas basicas y mapas \\
+2. Hot Spots & Zonas de concentracion significativa \\
+3. Machine Learning & Entrenar modelos predictivos \\
+4. Resultados ML & Metricas y predicciones \\
+5. Descargas & Exportar datos y resultados \\
+6. Modelo 3D & Visualizacion tridimensional de densidad \\
+7. Geoestadistica & Semivariogramas y Kriging \\
 \bottomrule
 \end{tabular}
-\caption{Factores críticos de presión demográfica en Rapa Nui}
+\caption{Secciones de la aplicacion web}
 \end{table}
 
-\subsection{Marco Legal: Ley 21.070}
-
-La \textbf{Ley 21.070 (2018)} ``Regula el ejercicio de los derechos a residir, permanecer y trasladarse hacia y desde el territorio especial de Isla de Pascua'' establece:
-
-\begin{itemize}
-    \item Restricción de permanencia máxima de 30 días para turistas
-    \item Requisitos de acreditación para residentes no Rapa Nui
-    \item Obligación de establecer la \textbf{capacidad de carga demográfica} (Art. 13)
-    \item Creación del \textbf{Índice Pascua (IPA)} como indicador integrado
-\end{itemize}
-
-El \textbf{Decreto N° 1120 (2018)} establece la fórmula para calcular la capacidad de carga basada en 21 variables agrupadas en 4 subsistemas:
-
-\begin{enumerate}
-    \item \textbf{Subsistema Población}: Dinámica demográfica, migración, turismo
-    \item \textbf{Subsistema Medio Ambiente}: Agua, residuos, energía, biodiversidad
-    \item \textbf{Subsistema Económico}: Empleo, vivienda, transporte, servicios
-    \item \textbf{Subsistema Socio-Cultural}: Patrimonio, identidad Rapa Nui, calidad de vida
-\end{enumerate}
-
-\subsection{Contribución de la Geoinformática}
-
-Este proyecto contribuye al monitoreo territorial mediante:
-
-\begin{itemize}
-    \item \textbf{Indicadores espaciales}: Densidad de edificaciones, cobertura de servicios
-    \item \textbf{Detección de patrones}: Hot spots de concentración urbana
-    \item \textbf{Modelos predictivos}: Proyección de expansión territorial
-    \item \textbf{Visualización}: Dashboard para tomadores de decisiones
-\end{itemize}
+La aplicacion puede accederse localmente en \texttt{http://localhost:8501} despues de ejecutar el sistema con Docker.
 
 %==============================================================================
-\section{Área de Estudio}
+\section{Elementos de Excelencia}
 %==============================================================================
 
-\subsection{Delimitación Geográfica}
+Para complementar el analisis basico, implementamos dos elementos avanzados:
 
-\textbf{Nombre}: Isla de Pascua (Rapa Nui) \\
-\textbf{Región}: Región de Valparaíso \\
-\textbf{Provincia}: Isla de Pascua \\
-\textbf{Comuna}: Isla de Pascua \\
-\textbf{Coordenadas centrales}: -27.1167° S, -109.3667° W \\
-\textbf{Área total}: $\sim$164 km$^2$ \\
-\textbf{Población (Censo 2017)}: 7,750 habitantes \\
-\textbf{Proyección utilizada}: EPSG:32719 (UTM 19S)
+\subsection{Visualizacion 3D}
 
-\subsection{Características Territoriales}
+Creamos un modelo tridimensional donde la altura de las columnas representa la cantidad de edificaciones en cada zona. Esta visualizacion permite identificar rapidamente las areas de mayor densidad urbana de una forma intuitiva y visual.
 
-\subsubsection{Geomor fología}
+Las columnas mas altas y de colores mas calidos (rojo, naranja) indican zonas con mayor concentracion, mientras que las columnas bajas y amarillas representan areas con pocas construcciones.
 
-Isla de Pascua es de origen volcánico, con tres volcanes principales:
+\subsection{Analisis de Redes}
+
+Implementamos un analisis avanzado de la red vial utilizando teoria de grafos. Esto nos permite:
 \begin{itemize}
-    \item \textbf{Rano Kau} (324 m): Volcán extinto al suroeste
-    \item \textbf{Poike} (370 m): Peninsula volcánica al este
-    \item \textbf{Maunga Terevaka} (507 m): Punto más alto de la isla
+    \item Calcular la centralidad de cada calle
+    \item Identificar cuellos de botella en la conectividad
+    \item Evaluar la accesibilidad desde cualquier punto de la isla
 \end{itemize}
-
-\subsubsection{Uso del Suelo}
-
-\begin{itemize}
-    \item \textbf{Urbano}: Concentrado en Hanga Roa (oeste)
-    \item \textbf{Protegido}: Parque Nacional Rapa Nui (43\% del territorio)
-    \item \textbf{Rural}: Praderas y sitios arqueológicos distribuidos
-    \item \textbf{Aeroportuario}: Aeropuerto Internacional Mataveri
-\end{itemize}
-
-\subsection{Justificación de la Selección}
-
-Isla de Pascua fue seleccionada por:
-
-\begin{enumerate}
-    \item \textbf{Tamaño manejable}: Escala apropiada para análisis completo
-    \item \textbf{Datos disponibles}: Buena cobertura en OpenStreetMap
-    \item \textbf{Interés territorial}: Desafíos reales de planificación
-    \item \textbf{Unicidad geográfica}: Caso de estudio singular
-    \item \textbf{Complejidad moderada}: Ideal para proyecto académico
-\end{enumerate}
-
-%==============================================================================
-\section{Datos y Metodología}
-%==============================================================================
-
-\subsection{Fuentes de Datos}
-
-\begin{table}[H]
-\centering
-\begin{tabular}{llll}
-\toprule
-\textbf{Tipo} & \textbf{Fuente} & \textbf{Elementos} & \textbf{Uso} \\
-\midrule
-Límite administrativo & OSM & 1 & Base cartográfica \\
-Red vial & OSM & 4,139 & Análisis conectividad \\
-Edificaciones & OSM & 4,045 & Variable objetivo ML \\
-Puntos de interés & OSM & 241 & Features espaciales \\
-Áreas verdes/playas & OSM & 12 & Contexto ambiental \\
-Transporte & OSM & 1 & Infraestructura \\
-\bottomrule
-\end{tabular}
-\caption{Datasets integrados en PostGIS}
-\end{table}
-
-\textbf{Fecha de descarga}: Diciembre 2024 \\
-\textbf{Herramienta}: OSMnx (Python) \\
-\textbf{Formato original}: GeoJSON \\
-\textbf{Sistema de almacenamiento}: PostgreSQL/PostGIS
-
-\subsection{Arquitectura del Sistema}
-
-\subsubsection{Infraestructura Docker}
-
-El proyecto utiliza Docker Compose con 3 servicios:
-
-\begin{verbatim}
-services:
-  postgis:
-    image: postgis/postgis:15-3.3
-    ports: ["55432:5432"]
-    volumes: [postgres_data, init scripts]
-    
-  jupyter:
-    build: ./docker/jupyter
-    ports: ["8888:8888"]
-    depends_on: [postgis]
-    
-  streamlit:
-    build: ./docker/streamlit
-    ports: ["8501:8501"]
-    depends_on: [postgis]
-\end{verbatim}
-
-\textbf{Ventajas}:
-\begin{itemize}
-    \item Reproducibilidad total del ambiente
-    \item Aislamiento de dependencias
-    \item Fácil despliegue en diferentes máquinas
-    \item Persistencia de datos con volúmenes
-\end{itemize}
-
-\subsubsection{Base de Datos PostGIS}
-
-\textbf{Versión}: PostgreSQL 15 con PostGIS 3.3 \\
-\textbf{Esquema}: \texttt{geoanalisis} \\
-\textbf{Extensiones activas}:
-\begin{itemize}
-    \item \texttt{postgis}: Tipos espaciales y funciones
-    \item \texttt{postgis\_topology}: Análisis topológico
-\end{itemize}
-
-\textbf{Tablas creadas} (23 capas total):
-\begin{itemize}
-    \item \texttt{limite\_administrativa}
-    \item \texttt{linea\_calles}
-    \item \texttt{area\_construcciones}
-    \item \texttt{punto\_interes}
-    \item \texttt{area\_naturaleza\_playas}
-    \item Y 18 capas adicionales de diferentes categorías OSM
-\end{itemize}
-
-\subsection{Pipeline de Procesamiento}
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-    node distance=1.5cm,
-    every node/.style={font=\small},
-    box/.style={rectangle, draw, fill=blue!20, text width=3cm, text centered, minimum height=1cm}
-]
-    \node [box] (osm) {1. Descarga OSM\\(OSMnx)};
-    \node [box, below of=osm] (geojson) {2. GeoJSON\\(Exportación)};
-    \node [box, below of=geojson] (postgis) {3. PostGIS\\(Carga)};
-    \node [box, below of=postgis] (analysis) {4. Análisis\\(Python/SQL)};
-    \node [box, below of=analysis] (viz) {5. Visualización\\(Streamlit)};
-    
-    \draw [->] (osm) -- (geojson);
-    \draw [->] (geojson) -- (postgis);
-    \draw [->] (postgis) -- (analysis);
-    \draw [->] (analysis) -- (viz);
-\end{tikzpicture}
-\caption{Flujo de datos del proyecto}
-\end{figure}
-
-\subsection{Herramientas y Librerías}
-
-\subsubsection{Python}
-
-\textbf{Geoespaciales}:
-\begin{itemize}
-    \item GeoPandas 0.14.0: Manipulación de datos vectoriales
-    \item Shapely 2.0.2: Operaciones geométricas
-    \item PyProj 3.6.1: Transformaciones de CRS
-    \item OSMnx 1.7.1: Descarga de datos OpenStreetMap
-\end{itemize}
-
-\textbf{Análisis Espacial}:
-\begin{itemize}
-    \item libpysal 4.9.0: Pesos espaciales
-    \item esda 2.5.0: Estadística espacial
-    \item splot 1.1.5: Visualización ESDA
-\end{itemize}
-
-\textbf{Machine Learning}:
-\begin{itemize}
-    \item scikit-learn 1.3.0: Modelos predictivos
-    \item XGBoost 2.0.0: Gradient boosting
-\end{itemize}
-
-\textbf{Visualización}:
-\begin{itemize}
-    \item Matplotlib 3.8.0: Gráficos estáticos
-    \item Folium 0.15.0: Mapas interactivos
-    \item Streamlit 1.28.0: Dashboard web
-\end{itemize}
-
-%==============================================================================
-\section{Implementación}
-%==============================================================================
-
-\subsection{Parte 1: Ambiente de Desarrollo}
-
-\begin{deliverable}{Entregable 1: Configuración Docker}
-\begin{itemize}
-    \item[\checkmark] Docker Compose funcional
-    \item[\checkmark] PostGIS con extensiones activadas
-    \item[\checkmark] Jupyter Lab con kernel geoespacial
-    \item[\checkmark] Scripts de inicialización automáticos
-    \item[\checkmark] Documentación completa (README.md)
-\end{itemize}
-\end{deliverable}
-
-La configuración Docker permite levantar todo el ambiente con un solo comando:
-
-\begin{verbatim}
-docker compose up -d
-\end{verbatim}
-
-Los servicios quedan accesibles en:
-\begin{itemize}
-    \item \textbf{PostGIS}: localhost:55432
-    \item \textbf{Jupyter}: localhost:8888
-    \item \textbf{Streamlit}: localhost:8501
-\end{itemize}
-
-\subsection{Parte 2: Adquisición de Datos}
-
-\begin{deliverable}{Entregable 2: Dataset Integrado}
-\begin{itemize}
-    \item[\checkmark] Datos vectoriales de OSM (23 capas)
-    \item[\checkmark] Red vial completa (4,139 elementos)
-    \item[\checkmark] Edificaciones (4,045 polígonos)
-    \item[\checkmark] Puntos de interés (241 amenidades)
-    \item[\checkmark] Todo cargado en PostGIS
-\end{itemize}
-\end{deliverable}
-
-\subsubsection{Script de Descarga}
-
-El archivo \texttt{scripts/01\_download\_osm.py} descarga todos los datos:
-
-\begin{lstlisting}[language=Python]
-import osmnx as ox
-
-# Configuracion
-place_name = "Isla de Pascua, Chile"
-
-# Descargar limite
-boundary = ox.geocode_to_gdf(place_name)
-boundary.to_file("data/boundary.geojson")
-
-# Descargar red vial
-G = ox.graph_from_place(place_name, network_type='all')
-ox.save_graph_geopackage(G, "data/streets.gpkg")
-
-# Descargar edificaciones
-buildings = ox.features_from_place(
-    place_name, 
-    tags={'building': True}
-)
-buildings.to_file("data/buildings.geojson")
-
-# Descargar amenidades
-amenities = ox.features_from_place(
-    place_name,
-    tags={'amenity': True}
-)
-amenities.to_file("data/amenities.geojson")
-\end{lstlisting}
-
-\subsection{Parte 3: Análisis Exploratorio Espacial}
-
-\begin{deliverable}{Entregable 3: ESDA Completo}
-\begin{itemize}
-    \item[\checkmark] Estadísticas descriptivas espaciales
-    \item[\checkmark] Mapas temáticos (10+ generados)
-    \item[\checkmark] Análisis de hot spots (Getis-Ord Gi*)
-    \item[\checkmark] Visualizaciones interactivas
-\end{itemize}
-\end{deliverable}
-
-\subsubsection{Análisis de Densidad Espacial}
-
-Se implementó análisis de densidad mediante grillas de 200m×200m:
-
-\begin{lstlisting}[language=Python]
-def create_grid(boundary_gdf, cell_size=200):
-    """Crear grilla regular para analisis"""
-    minx, miny, maxx, maxy = boundary_gdf.total_bounds
-    
-    cells = []
-    for x in range(int(minx), int(maxx), cell_size):
-        for y in range(int(miny), int(maxy), cell_size):
-            cell = box(x, y, x + cell_size, y + cell_size)
-            cells.append(cell)
-    
-    grid = gpd.GeoDataFrame(geometry=cells, crs=boundary_gdf.crs)
-    return grid[grid.intersects(boundary_gdf.unary_union)]
-\end{lstlisting}
-
-\textbf{Optimización crítica}: Se reemplazaron loops O(n*m) por spatial joins vectorizados:
-
-\begin{lstlisting}[language=Python]
-# ANTES: Muy lento (minutos)
-for idx, cell in grid.iterrows():
-    count = len(features[features.within(cell.geometry)])
-    grid.loc[idx, 'count'] = count
-
-# DESPUES: Rapido (segundos)
-joined = gpd.sjoin(features, grid, predicate='within')
-counts = joined.groupby('cell_id').size()
-grid = grid.merge(counts, on='cell_id', how='left')
-\end{lstlisting}
-
-\subsubsection{Hot Spot Analysis}
-
-Implementación de Getis-Ord Gi*:
-
-\begin{lstlisting}[language=Python]
-from libpysal.weights import Queen
-from esda.getisord import G_Local
-
-# Crear matriz de pesos espaciales
-w = Queen.from_dataframe(grid_analysis)
-w.transform = 'r'  # Row standardization
-
-# Calcular Gi*
-gi = G_Local(grid_analysis['n_features'].values, w, star=True)
-grid_analysis['gi_z'] = gi.Zs
-grid_analysis['gi_p'] = gi.p_sim
-
-# Clasificar hotspots
-grid_analysis['hotspot_type'] = 'No significativo'
-grid_analysis.loc[
-    (grid_analysis['gi_z'] > 1.96) & 
-    (grid_analysis['gi_p'] < 0.05), 
-    'hotspot_type'
-] = 'Hot Spot (95%)'
-\end{lstlisting}
-
-\subsection{Parte 4: Machine Learning Espacial}
-
-\begin{deliverable}{Entregable 4: Modelo Predictivo}
-\begin{itemize}
-    \item[\checkmark] Problema: Predicción de densidad edificatoria
-    \item[\checkmark] Feature engineering espacial completo
-    \item[\checkmark] Modelos: Random Forest, XGBoost, Gradient Boosting
-    \item[\checkmark] Validación espacial (GroupKFold)
-    \item[\checkmark] Mapas de predicción generados
-\end{itemize}
-\end{deliverable}
-
-\subsubsection{Feature Engineering Espacial}
-
-Se crearon 6 variables predictoras:
-
-\begin{enumerate}
-    \item \textbf{dist\_to\_center}: Distancia euclidiana al centroide de la isla
-    \item \textbf{n\_amenities}: Número de amenidades dentro de la celda
-    \item \textbf{street\_length}: Longitud total de calles en la celda
-    \item \textbf{n\_streets}: Número de segmentos viales
-    \item \textbf{x\_norm, y\_norm}: Coordenadas normalizadas [0,1]
-\end{enumerate}
-
-\subsubsection{Modelos Entrenados}
-
-Resultados de validación cruzada espacial  (5 folds):
-
-\begin{table}[H]
-\centering
-\begin{tabular}{lccc}
-\toprule
-\textbf{Modelo} & \textbf{R$^2$ Train} & \textbf{R$^2$ Test} & \textbf{RMSE} \\
-\midrule
-Random Forest & 0.89 & 0.85 & 2.34 \\
-XGBoost & 0.91 & 0.88 & 2.12 \\
-Gradient Boosting & 0.90 & 0.86 & 2.28 \\
-\bottomrule
-\end{tabular}
-\caption{Performance de modelos ML}
-\end{table}
-
-\textbf{Mejor modelo}: XGBoost (R$^2$=0.88, RMSE=2.12)
-
-\subsection{Parte 5: Aplicación Web Interactiva}
-
-\begin{deliverable}{Entregable 5: Dashboard Streamlit}
-\begin{itemize}
-    \item[\checkmark] Mapa interactivo con múltiples capas
-    \item[\checkmark] Gráficos dinámicos de estadísticas
-    \item[\checkmark] Módulo de análisis de hot spots
-    \item[\checkmark] Sección de machine learning
-    \item[\checkmark] Navegación intuitiva por pestaña s
-\end{itemize}
-\end{deliverable}
-
-La aplicación tiene 4 páginas principales:
-
-\begin{enumerate}
-    \item \textbf{Análisis Exploratorio}: Estadísticas básicas y mapas
-    \item \textbf{Hot Spots}: Mapa de calor y Getis-Ord Gi*
-    \item \textbf{Machine Learning}: Entrenar modelos y ver predicciones
-    \item \textbf{Modelos ML}: Dashboard de resultados con métricas
-\end{enumerate}
-
-%==============================================================================
-\section{Resultados}
-%==============================================================================
-
-\subsection{Visualizaciones Generadas}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{datos_isla_pascua.png}
-\caption{Datos espaciales integrados - Isla de Pascua}
-\end{figure}
-
-La figura muestra las 6 capas principales del análisis:
-\begin{itemize}
-    \item \textbf{Boundary}: Límite administrativo de la isla
-    \item \textbf{Streets}: Red vial completa (4,139 segmentos)
-    \item \textbf{Buildings}: Edificaciones (4,045 polígonos)
-    \item \textbf{Amenities}: Puntos de interés (241 elementos)
-    \item \textbf{Green Areas}: Áreas naturales y playas (12 polígonos)
-    \item \textbf{Transport}: Infraestructura de transporte
-\end{itemize}
-
-\subsection{Hallazgos Principales}
-
-\subsubsection{Distribución Urbana}
-
-\begin{itemize}
-    \item \textbf{Concentración urbana}: 95\% de edificaciones en Hanga Roa (costa oeste)
-    \item \textbf{Patrón linear}: Desarrollo urbano sigue la línea costera
-    \item \textbf{Baja densidad}: Promedio de 2-3 edificios por celda de 200m
-    \item \textbf{Núcleo comercial}: Hot spot significativo cerca del puerto
-\end{itemize}
-
-\subsubsection{Análisis de Hot Spots}
-
-Resultados del Getis-Ord Gi*:
-\begin{itemize}
-    \item \textbf{Hot Spot 99\%}: Zona centro de Hanga Roa (p < 0.01)
-    \item \textbf{Hot Spot 95\%}: Áreas residenciales adyacentes
-    \item \textbf{Cold Spots}: Zonas rurales y protegidas
-\end{itemize}
-
-\subsubsection{Predicciones de Machine Learning}
-
-El modelo XGBoost identificó como variables más importantes:
-\begin{enumerate}
-    \item Distancia al centro (28\% importancia)
-    \item Densidad de amenidades (22\%)
-    \item Longitud de calles (15\%)
-    \item Número de calles (18\%)
-    \item Coordenadas X, Y (17\% combinadas)
-\end{enumerate}
-
-\subsection{Limitaciones Identificadas}
-
-\begin{enumerate}
-    \item \textbf{Sin datos raster}: No se incluyó DEM ni imágenes satelitales
-    \item \textbf{Sin datos censales}: Falta información socioeconómica
-    \item \textbf{Datos estáticos}: Solo un snapshot temporal de OSM
-    \item \textbf{Cobertura OSM variable}: Algunas zonas rurales poco mapeadas
-\end{enumerate}
 
 %==============================================================================
 \section{Conclusiones}
 %==============================================================================
 
-\subsection{Cumplimiento de Objetivos}
+\subsection{Que Aprendimos}
+
+\begin{enumerate}
+    \item \textbf{Concentracion extrema}: Isla de Pascua tiene un patron de desarrollo urbano muy concentrado, con casi toda la actividad en Hanga Roa
+    \item \textbf{Presion localizada}: Los problemas de capacidad de carga afectan principalmente a un sector pequeno de la isla
+    \item \textbf{Predictibilidad}: Es posible predecir la densidad edificatoria usando caracteristicas geograficas simples
+    \item \textbf{Vulnerabilidad vial}: La red de calles tiene puntos criticos que podrian afectar la movilidad
+\end{enumerate}
+
+\subsection{Utilidad Practica}
+
+Este proyecto puede ayudar a:
+\begin{itemize}
+    \item \textbf{Planificadores urbanos}: Identificar zonas para expansion controlada
+    \item \textbf{Autoridades}: Monitorear el crecimiento y comparar con la capacidad de carga
+    \item \textbf{Investigadores}: Entender patrones de ocupacion en territorios insulares
+    \item \textbf{Comunidad}: Visualizar como esta distribuido el desarrollo en su isla
+\end{itemize}
+
+\subsection{Cumplimiento de Requisitos}
+
+El proyecto cumple con todos los componentes requeridos por el laboratorio:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{lc}
+\begin{tabular}{lcc}
 \toprule
-\textbf{Objetivo} & \textbf{Estado} \\
+\textbf{Componente} & \textbf{Peso} & \textbf{Estado} \\
 \midrule
-OE1: Infraestructura Docker/PostGIS & \checkmark Cumplido \\
-OE2: Adquisición datos multi-fuente & \checkmark Cumplido \\
-OE3: Análisis exploratorio (ESDA) & \checkmark Cumplido \\
-OE4: Hot spots (Getis-Ord) & \checkmark Cumplido \\
-OE5: Machine learning espacial & \checkmark Cumplido \\
-OE6: Aplicación web Streamlit & \checkmark Cumplido \\
+Ambiente Docker/PostGIS & 10\% & Completado \\
+Datos multi-fuente & 20\% & Completado \\
+Analisis Exploratorio (ESDA) & 20\% & Completado \\
+Geoestadistica & 15\% & Completado \\
+Machine Learning & 20\% & Completado \\
+Aplicacion Web & 15\% & Completado \\
+\midrule
+\textbf{Total} & \textbf{100\%} & \textbf{Completado} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Aportes del Proyecto}
-
-\begin{enumerate}
-    \item \textbf{Metodológico}: Pipeline reproducible aplicable a otras comunas
-    \item \textbf{Técnico}: Optimizaciones de rendimiento (spatial joins vectorizados)
-    \item \textbf{Práctico}: Información territorial útil para monitoreo de capacidad de carga
-    \item \textbf{Académico}: Integración exitosa de múltiples técnicas geoespaciales
-    \item \textbf{Institucional}: Alineación con Ley 21.070 y modelo MCCIP
-\end{enumerate}
-
-\subsection{Vinculación con Instrumentos de Planificación}
-
-Este proyecto se alinea con los siguientes instrumentos oficiales:
-
-\begin{itemize}
-    \item \textbf{PROT Valparaíso Insular}: Plan Regional de Ordenamiento Territorial
-    \item \textbf{Ley 21.070}: Marco legal para gestión de capacidad de carga
-    \item \textbf{MCCIP}: Modelo oficial de capacidad de carga demográfica (21 variables)
-    \item \textbf{SIT Rapa Nui (MINAGRI)}: Sistema de información territorial agrícola
-    \item \textbf{Decreto N° 1120}: Establece el Índice Pascua (IPA)
-\end{itemize}
-
-\subsection{Trabajo Futuro}
-
-\textbf{Extensiones propuestas}:
-\begin{itemize}
-    \item Integrar imágenes Sentinel-2 para índices vegetacionales
-    \item Añadir datos de censo para análisis socioeconómico
-    \item Implementar análisis de series temporales (cambios OSM en el tiempo)
-    \item Desarrollar API REST para acceso programático
-    \item Añadir visualizaciones 3D con el modelo de elevación
-\end{itemize}
+Ademas, incluimos 2 de los 3 elementos de excelencia requeridos: Visualizacion 3D y Analisis de Redes.
 
 %==============================================================================
 \section{Referencias}
 %==============================================================================
 
 \begin{enumerate}
-    \item Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. \textit{Computers, Environment and Urban Systems}, 65, 126-139.
-    
-    \item Anselin, L. (1995). Local indicators of spatial association—LISA. \textit{Geographical Analysis}, 27(2), 93-115.
-    
-    \item Getis, A., \& Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. \textit{Geographical Analysis}, 24(3), 189-206.
-    
-    \item GeoPandas Development Team. (2023). GeoPandas: Python tools for geographic data. \url{https://geopandas.org}
-    
-    \item Rey, S. J., \& Anselin, L. (2007). PySAL: A Python library of spatial analytical methods. \textit{The Review of Regional Studies}, 37(1), 5-27.
-    
-    \item OpenStreetMap Contributors. (2024). OpenStreetMap. \url{https://www.openstreetmap.org}
-    
-    \item PostGIS Project Steering Committee. (2023). PostGIS 3.3 Manual. \url{https://postgis.net/docs/}
-    
-    \item Breiman, L. (2001). Random forests. \textit{Machine Learning}, 45(1), 5-32.
-    
-    \item Chen, T., \& Guestrin, C. (2016). XGBoost: A scalable tree boosting system. \textit{Proceedings of KDD}, 785-794.
-    
-    \item INE Chile. (2017). Censo de Población y Vivienda 2017. Instituto Nacional de Estadísticas.
-    
-    \item Ley 21.070 (2018). Regula el ejercicio de los derechos a residir, permanecer y trasladarse hacia y desde el territorio especial de Isla de Pascua. Biblioteca del Congreso Nacional.
-    
-    \item Decreto N° 1120 (2018). Establece la capacidad de carga demográfica del territorio especial de Isla de Pascua. Ministerio del Interior.
-    
-    \item Bergamini, K., Moris, R., Gilabert, H., Zaviezo, D. \& Ángel, P. (2021). Demographic Carrying Capacity Model, a tool for decision making in Rapanui. \textit{Island Studies Journal}.
-    
-    \item Instituto de Estudios Urbanos UC (2018). Modelo de Capacidad de Carga Demográfica para el territorio de Isla de Pascua (MCCIP). SUBDERE.
-    
-    \item MINAGRI (2017). Sistema de Información Territorial de Rapa Nui. \url{https://minagri.gob.cl/servicios/sistema-de-informacion-territorial-de-rapa-nui/}
+    \item Ley 21.070 (2018). Regula el ejercicio de los derechos a residir, permanecer y trasladarse hacia y desde el territorio especial de Isla de Pascua.
+    \item Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. \textit{Computers, Environment and Urban Systems}.
+    \item Anselin, L. (1995). Local indicators of spatial association-LISA. \textit{Geographical Analysis}.
+    \item OpenStreetMap Contributors (2024). OpenStreetMap. \url{https://www.openstreetmap.org}
+    \item PostGIS Project (2023). PostGIS Documentation. \url{https://postgis.net}
 \end{enumerate}
-
-%==============================================================================
-\section*{Anexo A: Estructura del Repositorio}
-%==============================================================================
-
-\begin{verbatim}
-proyecto/
-├── README.md
-├── docker-compose.yml
-├── requirements.txt
-├── .env
-│
-├── docker/
-│   ├── jupyter/Dockerfile
-│   └── streamlit/Dockerfile
-│
-├── data/
-│   └── raw/isla_de_pascua/
-│
-├── notebooks/
-│   ├── 01_exploratory_analysis.ipynb
-│   └── 02_ml_models.ipynb
-│
-├── scripts/
-│   ├── 01_download_osm.py
-│   ├── 02_load_postgis.py
-│   └── utils.py
-│
-├── app/
-│   ├── main.py
-│   └── pages/
-│       ├── 01_Analisis_Exploratorio.py
-│       ├── 02_Hot_Spots.py
-│       ├── 03_Machine_Learning.py
-│       └── 04_Modelos_ML.py
-│
-└── docs/
-    └── informe_tecnico.pdf
-\end{verbatim}
-
-%==============================================================================
-\section*{Anexo B: Comandos de Ejecución}
-%==============================================================================
-
-\subsection*{Levantar ambiente}
-
-\begin{verbatim}
-# Iniciar servicios
-docker compose up -d
-
-# Verificar estado
-docker compose ps
-
-# Ver logs
-docker compose logs -f streamlit
-\end{verbatim}
-
-\subsection*{Acceder a servicios}
-
-\begin{verbatim}
-# PostGIS
-psql -h localhost -p 55432 -U geouser -d geodatabase
-
-# Jupyter
-# Browser: http://localhost:8888
-
-# Streamlit
-# Browser: http://localhost:8501
-\end{verbatim}
-
-\subsection*{Cargar datos}
-
-\begin{verbatim}
-# Descargar desde OSM
-python scripts/01_download_osm.py
-
-# Cargar a PostGIS
-python scripts/02_load_postgis.py
-\end{verbatim}
 
 \end{document}
