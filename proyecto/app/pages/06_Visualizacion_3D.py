@@ -1,256 +1,203 @@
+"""
+Modelo 3D de Densidad Urbana - Isla de Pascua
+Visualizacion de patrones de ocupacion territorial
+"""
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-from pathlib import Path
-import rasterio
+from shapely.geometry import box
+import os
+from sqlalchemy import create_engine
 
-st.set_page_config(page_title="Visualización 3D - Isla de Pascua", layout="wide", page_icon="🏔️")
+st.set_page_config(page_title="Modelo 3D - Isla de Pascua", layout="wide")
 
-st.title("🏔️ Visualización 3D del Terreno")
+st.title("Modelo 3D de Densidad Urbana")
+st.markdown("""
+Este modelo representa la **densidad de edificaciones** en Isla de Pascua.
+Cada columna indica la cantidad de construcciones en esa zona, permitiendo
+identificar los patrones de asentamiento urbano.
+""")
 st.markdown("---")
 
-# Rutas
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DATA_PROCESSED = BASE_DIR / "data" / "processed"
+# Configuracion BD
+DB_CONFIG = {
+    'host': os.getenv('POSTGRES_HOST', 'localhost'),
+    'port': os.getenv('POSTGRES_PORT', '55432'),
+    'database': os.getenv('POSTGRES_DB', 'geodatabase'),
+    'user': os.getenv('POSTGRES_USER', 'geouser'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'geopass123'),
+}
 
-st.markdown("""
-Explora el terreno de Isla de Pascua en 3D con elevación real del DEM.
-""")
 
-# ============================================================================
-# CARGAR DATOS
-# ============================================================================
+def get_engine():
+    return create_engine(
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+        f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+    )
+
 
 @st.cache_data
-def load_grid_data():
-    """Cargar grilla con datos topográficos"""
-    grid_file = DATA_PROCESSED / "grid_with_topography.gpkg"
-    
-    if not grid_file.exists():
-        grid_file = DATA_PROCESSED / "prepared.gpkg"
-    
-    if grid_file.exists():
-        try:
-            grid = gpd.read_file(grid_file)
-        except:
-            import fiona
-            layers = fiona.listlayers(grid_file)
-            grid = gpd.read_file(grid_file, layer=layers[0])
-        
-        # Convertir a WGS84 para pydeck
-        if grid.crs != "EPSG:4326":
-            grid = grid.to_crs("EPSG:4326")
-        
-        # Extraer coordenadas del centroide
-        grid['lon'] = grid.geometry.centroid.x
-        grid['lat'] = grid.geometry.centroid.y
-        
-        return grid
-    return None
+def load_buildings():
+    """Cargar edificios desde PostGIS."""
+    try:
+        engine = get_engine()
+        gdf = gpd.read_postgis(
+            "SELECT * FROM geoanalisis.area_construcciones", 
+            engine, geom_col='geometry'
+        )
+        return gdf
+    except Exception as e:
+        st.error(f"Error cargando datos: {e}")
+        return None
 
-grid = load_grid_data()
 
-if grid is None:
-    st.error("No se pudieron cargar los datos. Ejecuta primero los scripts de procesamiento.")
+# Cargar datos
+buildings = load_buildings()
+
+if buildings is None or len(buildings) == 0:
+    st.error("No se pudieron cargar los edificios desde la base de datos.")
     st.stop()
 
 # ============================================================================
-# CONFIGURACIÓN DE VISUALIZACIÓN
+# CONFIGURACION
 # ============================================================================
 
-st.sidebar.header("⚙️ Configuración 3D")
+st.sidebar.header("Configuracion")
 
-# Seleccionar variable a visualizar
-numeric_cols = grid.select_dtypes(include=[np.number]).columns.tolist()
-exclude = ['lon', 'lat', 'cell_id', 'index', 'fid']
-available_vars = [col for col in numeric_cols if col not in exclude]
-
-if not available_vars:
-    available_vars = ['elevation_mean'] if 'elevation_mean' in grid.columns else numeric_cols[:1]
-
-color_var = st.sidebar.selectbox(
-    "Variable para color:",
-    options=available_vars,
-    index=0 if 'elevation_mean' in available_vars else 0
+# Parametros
+cell_size = st.sidebar.selectbox(
+    "Tamano de celda:",
+    [100, 200, 300, 400],
+    index=1,
+    format_func=lambda x: f"{x} metros"
 )
 
-# Configuración de elevación
-elevation_var = st.sidebar.selectbox(
-    "Variable para elevación:",
-    options=available_vars,
-    index=0 if 'elevation_mean' in available_vars else 0
-)
-
-elevation_scale = st.sidebar.slider(
-    "Escala de elevación:",
-    min_value=1,
-    max_value=100,
-    value=20,
-    help="Multiplica la elevación para exageración vertical"
-)
-
-# Configuración de vista
-view_pitch = st.sidebar.slider(
-    "Ángulo de vista (pitch):",
-    min_value=0,
-    max_value=90,
-    value=45
-)
-
-view_zoom = st.sidebar.slider(
-    "Zoom:",
-    min_value=10,
-    max_value=15,
-    value=12
+height_multiplier = st.sidebar.slider(
+    "Escala de altura:",
+    min_value=5,
+    max_value=50,
+    value=20
 )
 
 # ============================================================================
-# PREPARAR DATOS PARA PYDECK
+# PROCESAR DATOS
 # ============================================================================
 
-# Asegurar que las variables existen
-if color_var not in grid.columns:
-    color_var = numeric_cols[0]
-if elevation_var not in grid.columns:
-    elevation_var = numeric_cols[0]
+# Convertir a CRS proyectado para calculos de area
+# Usar un CRS local apropiado para Isla de Pascua
+buildings_proj = buildings.to_crs("EPSG:32706")  # UTM 6S (zona del Pacifico Sur)
 
-# Normalizar variable de color para RGB
-color_values = grid[color_var].fillna(0)
-color_normalized = (color_values - color_values.min()) / (color_values.max() - color_values.min())
+# Calcular area de cada edificio
+buildings_proj['area_m2'] = buildings_proj.geometry.area
 
-# Crear colores RGB (gradiente azul -> verde -> rojo)
-def value_to_color(value):
-    """Convertir valor normalizado [0,1] a color RGB"""
-    if value < 0.5:
-        # Azul a verde
-        r = 0
-        g = int(255 * (value * 2))
-        b = int(255 * (1 - value * 2))
-    else:
-        # Verde a rojo
-        r = int(255 * ((value - 0.5) * 2))
-        g = int(255 * (1 - (value - 0.5) * 2))
-        b = 0
-    return [r, g, b, 200]
+# Obtener centroides en WGS84
+buildings_wgs = buildings.to_crs("EPSG:4326")
+centroids = buildings_wgs.geometry.centroid
 
-grid['color'] = color_normalized.apply(value_to_color)
+# Crear dataframe con los datos
+points_data = pd.DataFrame({
+    'lon': centroids.x.values,
+    'lat': centroids.y.values,
+    'area': buildings_proj['area_m2'].values
+})
 
-# Elevación
-grid['elevation_3d'] = grid[elevation_var].fillna(0) * elevation_scale
+# Filtrar puntos invalidos
+points_data = points_data.dropna()
+
+if len(points_data) == 0:
+    st.error("No hay datos validos para visualizar.")
+    st.stop()
+
+# Calcular centro del mapa
+center_lon = points_data['lon'].mean()
+center_lat = points_data['lat'].mean()
 
 # ============================================================================
-# CREAR VISUALIZACIÓN 3D
+# CREAR VISUALIZACION 3D
 # ============================================================================
 
-# Calcular centro
-center_lat = grid['lat'].mean()
-center_lon = grid['lon'].mean()
+st.subheader(f"Mapa de Densidad ({len(points_data)} edificios)")
 
-# Configurar vista inicial
+# Vista inicial
 view_state = pdk.ViewState(
     latitude=center_lat,
     longitude=center_lon,
-    zoom=view_zoom,
-    pitch=view_pitch,
+    zoom=13,
+    pitch=45,
     bearing=0
 )
 
-# Capa de columnas 3D
-column_layer = pdk.Layer(
-    "ColumnLayer",
-    data=grid,
-    get_position=["lon", "lat"],
-    get_elevation="elevation_3d",
-    elevation_scale=1,
-    radius=100,
-    get_fill_color="color",
+# Capa hexagonal de densidad
+hex_layer = pdk.Layer(
+    "HexagonLayer",
+    data=points_data,
+    get_position=['lon', 'lat'],
+    radius=cell_size,
+    elevation_scale=height_multiplier,
+    elevation_range=[0, 300],
+    extruded=True,
     pickable=True,
-    auto_highlight=True,
-)
-
-# Capa de polígonos (base)
-polygon_layer = pdk.Layer(
-    "GeoJsonLayer",
-    data=grid.__geo_interface__,
-    get_fill_color="color",
-    get_line_color=[255, 255, 255, 100],
-    line_width_min_pixels=1,
-    pickable=True,
-    auto_highlight=True,
+    coverage=0.8,
+    color_range=[
+        [255, 255, 178],
+        [254, 217, 118],
+        [254, 178, 76],
+        [253, 141, 60],
+        [240, 59, 32],
+        [189, 0, 38]
+    ]
 )
 
 # Tooltip
 tooltip = {
-    "html": f"<b>Celda</b><br/>"
-            f"<b>{color_var}:</b> {{{color_var}}}<br/>"
-            f"<b>{elevation_var}:</b> {{{elevation_var}}}<br/>",
-    "style": {
-        "backgroundColor": "steelblue",
-        "color": "white"
-    }
+    "html": "<b>Zona</b><br/>Edificios en celda: {elevationValue}",
+    "style": {"backgroundColor": "#2c3e50", "color": "white"}
 }
 
 # Renderizar mapa
 st.pydeck_chart(pdk.Deck(
-    layers=[column_layer],
+    layers=[hex_layer],
     initial_view_state=view_state,
     tooltip=tooltip,
-    map_style="mapbox://styles/mapbox/satellite-v9"
+    map_style="mapbox://styles/mapbox/dark-v10"
 ))
 
 # ============================================================================
-# ESTADÍSTICAS
+# ESTADISTICAS
 # ============================================================================
+
+st.markdown("---")
+st.subheader("Estadisticas")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric(
-        label=f"{color_var} (promedio)",
-        value=f"{grid[color_var].mean():.2f}",
-        delta=f"±{grid[color_var].std():.2f}"
-    )
-
+    st.metric("Total edificios", len(points_data))
 with col2:
-    st.metric(
-        label=f"{color_var} (mínimo)",
-        value=f"{grid[color_var].min():.2f}"
-    )
-
+    st.metric("Area promedio", f"{points_data['area'].mean():.0f} m2")
 with col3:
-    st.metric(
-        label=f"{color_var} (máximo)",
-        value=f"{grid[color_var].max():.2f}"
-    )
+    st.metric("Area total", f"{points_data['area'].sum()/10000:.1f} ha")
 
 # ============================================================================
-# INFORMACIÓN
+# INTERPRETACION
 # ============================================================================
-
-with st.expander("ℹ️ Información sobre la visualización"):
-    st.markdown("""
-    ### Controles del Mapa 3D
-    
-    - **Rotar**: Click izquierdo + arrastrar
-    - **Inclinar**: Click derecho + arrastrar
-    - **Zoom**: Rueda del ratón o doble click
-    - **Pan**: Shift + click izquierdo + arrastrar
-    
-    ### Variables Disponibles
-    
-    - **Elevación**: Altura sobre el nivel del mar (DEM)
-    - **Pendiente (slope)**: Inclinación del terreno en grados
-    - **Aspecto (aspect)**: Orientación de la pendiente (0-360°)
-    - **Otras variables**: Según análisis realizados
-    
-    ### Interpretación
-    
-    - **Colores fríos (azul)**: Valores bajos
-    - **Colores cálidos (rojo)**: Valores altos
-    - **Altura de columnas**: Proporcional a la variable de elevación seleccionada
-    """)
 
 st.markdown("---")
-st.caption("Visualización 3D - Isla de Pascua | Elemento de Excelencia")
+st.subheader("Interpretacion")
+
+st.markdown("""
+**Lectura del modelo:**
+- Las columnas mas altas (rojo) indican zonas con mayor concentracion de edificios
+- Las columnas bajas (amarillo) representan areas con menos construcciones
+- La ausencia de columnas indica zonas sin edificaciones
+
+**Patrones observados:**
+- La mayor densidad se concentra en **Hanga Roa**, el unico centro urbano de la isla
+- Las zonas perifericas muestran una densidad constructiva mucho menor
+- Este patron refleja la concentracion historica de la poblacion en un solo asentamiento
+""")
+
+st.markdown("---")
+st.caption("Modelo 3D de Densidad - Isla de Pascua | Laboratorio Integrador 2025")

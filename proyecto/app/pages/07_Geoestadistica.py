@@ -15,9 +15,9 @@ import sys
 # Agregar path de scripts
 sys.path.append(str(__file__).replace('/app/pages/07_Geoestadistica.py', '/scripts'))
 
-# Configuración
-st.set_page_config(page_title="Geoestadística", page_icon="📊", layout="wide")
-st.title("📊 Análisis Geoestadístico")
+# Configuracion
+st.set_page_config(page_title="Geoestadistica", layout="wide")
+st.title("Analisis Geoestadistico")
 st.markdown("---")
 
 CRS_UTM = 'EPSG:32719'
@@ -279,7 +279,7 @@ try:
         st.stop()
     
     # Sidebar
-    st.sidebar.header("⚙️ Configuración")
+    st.sidebar.header("Configuracion")
     
     cell_size = st.sidebar.slider("Tamaño de celda (m)", 100, 500, 200, 50)
     
@@ -312,7 +312,7 @@ try:
     values = grid_with_data['count'].values.astype(float)
     
     # Tabs principales
-    tab1, tab2, tab3 = st.tabs(["📈 Semivariograma", "🗺️ Interpolación", "📊 Validación"])
+    tab1, tab2, tab3 = st.tabs(["Semivariograma", "Interpolacion", "Validacion"])
     
     with tab1:
         st.subheader("Análisis de Semivariograma")
@@ -377,7 +377,7 @@ try:
             """)
         
         # Tabla de lags
-        with st.expander("📋 Ver datos del semivariograma"):
+        with st.expander("Ver datos del semivariograma"):
             vario_df = pd.DataFrame({
                 'Lag (m)': lags.round(0),
                 'Semivarianza': gamma.round(4),
@@ -397,7 +397,7 @@ try:
         if method == "IDW (Inverse Distance Weighting)":
             power = st.slider("Potencia IDW", 1.0, 4.0, 2.0, 0.5)
         
-        if st.button("🚀 Ejecutar Interpolación", type="primary"):
+        if st.button("Ejecutar Interpolacion", type="primary"):
             with st.spinner("Realizando interpolación..."):
                 # Crear grilla de predicción
                 pred_grid = create_analysis_grid(data['boundary'], cell_size)
@@ -486,7 +486,7 @@ try:
         cada punto se predice usando los demás puntos como referencia.
         """)
         
-        if st.button("📊 Ejecutar Validación (Leave-One-Out)", type="primary"):
+        if st.button("Ejecutar Validacion (Leave-One-Out)", type="primary"):
             with st.spinner("Ejecutando validación cruzada..."):
                 n = len(values)
                 
