@@ -35,6 +35,8 @@
 \author{
     Felipe Baeza \\
     \texttt{felipe.baeza.m@usach.cl}
+    Catalina López \\
+    \texttt{catalina.lopez.a@usach.cl}
 }
 
 \date{Diciembre 2025}
@@ -52,34 +54,34 @@
 \section{Introduccion: El Problema de Isla de Pascua}
 %==============================================================================
 
-Isla de Pascua, conocida tambien como Rapa Nui, es una pequena isla ubicada en medio del Oceano Pacifico, a mas de 3.700 kilometros de la costa de Chile continental. Es famosa mundialmente por sus estatuas gigantes de piedra llamadas \textbf{moais}, que fueron construidas por la antigua civilizacion Rapa Nui hace cientos de anos.
+Isla de Pascua, conocida también como Rapa Nui, es una pequeña isla ubicada en medio del Océano Pacífico, a más de 3.700 kilómetros de la costa de Chile continental. Es famosa mundialmente por sus estatuas gigantes de piedra llamadas \textbf{moais}, que fueron construidas por la antigua civilización Rapa Nui hace cientos de años.
 
-Sin embargo, esta isla enfrenta un problema grave: \textbf{demasiada gente quiere vivir alli}. Entre los anos 2002 y 2017, la poblacion aumento en un 116\%, pasando de aproximadamente 3.800 a mas de 8.000 habitantes. Ademas, cada ano recibe mas de 150.000 turistas, lo que genera una enorme presion sobre los recursos limitados de la isla.
+Sin embargo, esta isla enfrenta un problema grave: \textbf{demasiada gente quiere vivir allí}. Entre los años 2002 y 2017, la población aumentó en un 116\%, pasando de aproximadamente 3.800 a más de 8.000 habitantes. Además, cada año recibe más de 150.000 turistas, lo que genera una enorme presión sobre los recursos limitados de la isla.
 
 \subsection{Por que es un Problema}
 
-Imaginemos que una casa esta disenada para que vivan 4 personas, pero de repente llegan 10. El agua no alcanza, la basura se acumula y todo se vuelve incomodo. Eso es exactamente lo que pasa en Isla de Pascua:
+Imaginemos que una casa esta diseñada para que vivan 4 personas, pero de repente llegan 10. El agua no alcanza, la basura se acumula y todo se vuelve incómodo. Eso es exactamente lo que pasa en Isla de Pascua:
 
 \begin{itemize}
-    \item \textbf{Agua limitada}: La isla tiene un unico acuifero subterraneo que se esta agotando
-    \item \textbf{Basura acumulada}: Los sistemas de tratamiento de residuos estan al limite
-    \item \textbf{Construcciones sin control}: Las casas se construyen cada vez mas cerca de sitios arqueologicos protegidos
+    \item \textbf{Agua limitada}: La isla tiene un único acuífero subterráneo que se está agotando
+    \item \textbf{Basura acumulada}: Los sistemas de tratamiento de residuos están al límite
+    \item \textbf{Construcciones sin control}: Las casas se construyen cada vez más cerca de sitios arqueológicos protegidos
     \item \textbf{Infraestructura saturada}: Calles, electricidad y servicios no dan abasto
 \end{itemize}
 
 \subsection{Objetivo del Proyecto}
 
-Este proyecto utiliza \textbf{tecnologia de analisis geografico} para estudiar como estan distribuidas las construcciones en la isla, identificar donde hay mayor concentracion de edificios, y crear herramientas que ayuden a las autoridades a tomar mejores decisiones sobre el uso del territorio.
+Este proyecto utiliza \textbf{tecnología de análisis geográfico} para estudiar como están distribuidas las construcciones en la isla, identificar donde hay mayor concentración de edificios, y crear herramientas que ayuden a las autoridades a tomar mejores decisiones sobre el uso del territorio.
 
-En terminos simples, creamos un ``mapa inteligente'' que no solo muestra donde estan las cosas, sino que tambien analiza patrones y puede predecir tendencias.
+En términos simples, creamos un ``mapa inteligente'' que no solo muestra dónde están las cosas, sino que también analiza patrones y puede predecir tendencias.
 
 %==============================================================================
 \section{Los Datos: De Donde Viene la Informacion}
 %==============================================================================
 
-Para realizar este analisis, necesitabamos informacion geografica detallada sobre la isla. Utilizamos una fuente de datos llamada \textbf{OpenStreetMap} (OSM), que es como un Wikipedia de mapas: personas de todo el mundo contribuyen mapeando calles, edificios y puntos de interes.
+Para realizar este análisis, necesitábamos información geográfica detallada sobre la isla. Utilizamos una fuente de datos llamada \textbf{OpenStreetMap} (OSM), que es como un Wikipedia de mapas: personas de todo el mundo contribuyen mapeando calles, edificios y puntos de interés.
 
-\subsection{Que Datos Obtuvimos}
+\subsection{Qué Datos Obtuvimos}
 
 \begin{table}[H]
 \centering
@@ -89,92 +91,90 @@ Para realizar este analisis, necesitabamos informacion geografica detallada sobr
 \midrule
 Edificaciones & 4,045 & Analizar densidad urbana \\
 Calles & 4,139 & Estudiar conectividad vial \\
-Puntos de interes & 241 & Ubicar servicios y comercios \\
-Limite de la isla & 1 & Definir area de estudio \\
-Areas verdes/playas & 12 & Contexto ambiental \\
+Puntos de interés & 241 & Ubicar servicios y comercios \\
+Límite de la isla & 1 & Definir área de estudio \\
+Áreas verdes/playas & 12 & Contexto ambiental \\
 \bottomrule
 \end{tabular}
-\caption{Resumen de datos geograficos utilizados}
+\caption{Resumen de datos geográficos utilizados}
 \end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{01_overview_datasets.png}
-\caption{Vista general de los datos: se muestran las edificaciones (puntos naranjas), calles (lineas), y el limite de la isla}
+\caption{Vista general de los datos: se muestran las edificaciones (puntos naranjas), calles (líneas), y el límite de la isla}
 \end{figure}
 
-La figura anterior muestra como se distribuyen los distintos tipos de datos en el territorio. Podemos observar que la gran mayoria de las construcciones se concentran en un solo sector de la isla: el pueblo de \textbf{Hanga Roa}, ubicado en la costa oeste.
+La figura anterior muestra cómo se distribuyen los distintos tipos de datos en el territorio. Podemos observar que la gran mayoría de las construcciones se concentran en un solo sector de la isla: el pueblo de \textbf{Hanga Roa}, ubicado en la costa oeste.
 
 %==============================================================================
-\section{Metodologia: Como Analizamos los Datos}
+\section{Metodología: Cómo Analizamos los Datos}
 %==============================================================================
 
-\subsection{Infraestructura Tecnologica}
+\subsection{Infraestructura Tecnológica}
 
-Para procesar toda esta informacion, creamos un \textbf{ambiente de trabajo reproducible} usando tecnologia llamada Docker. Esto significa que cualquier persona puede replicar exactamente nuestro analisis en su propia computadora.
+Para procesar toda esta información, creamos un \textbf{ambiente de trabajo reproducible} usando tecnología llamada Docker. Esto significa que cualquier persona puede replicar exactamente nuestro análisis en su propia computadora.
 
 El sistema incluye:
 \begin{itemize}
-    \item \textbf{Base de datos geografica} (PostGIS): Almacena los datos de forma eficiente
-    \item \textbf{Entorno de analisis} (Jupyter): Permite escribir codigo y visualizar resultados
-    \item \textbf{Aplicacion web} (Streamlit): Muestra los resultados de forma interactiva
+    \item \textbf{Base de datos geográfica} (PostGIS): Almacena los datos de forma eficiente
+    \item \textbf{Entorno de análisis} (Jupyter): Permite escribir código y visualizar resultados
+    \item \textbf{Aplicación web} (Streamlit): Muestra los resultados de forma interactiva
 \end{itemize}
 
-\subsection{Metodos de Analisis}
+\subsection{Métodos de Análisis}
+Utilizamos cuatro tipos principales de análisis:
 
-Utilizamos cuatro tipos principales de analisis:
+\subsubsection{1. Análisis Exploratorio (ESDA)}
 
-\subsubsection{1. Analisis Exploratorio (ESDA)}
+El primer paso fue entender cómo se distribuyen las edificaciones. Creamos una \textbf{grilla regular} sobre la isla, dividiendo el territorio en celdas de 200 metros por 200 metros, y contamos cuantos edificios había en cada celda.
 
-El primer paso fue entender como se distribuyen las edificaciones. Creamos una \textbf{grilla regular} sobre la isla, dividiendo el territorio en celdas de 200 metros por 200 metros, y contamos cuantos edificios habia en cada celda.
+Esto nos permitió crear mapas de densidad que muestran claramente donde hay más y menos construcciones.
 
-Esto nos permitio crear mapas de densidad que muestran claramente donde hay mas y menos construcciones.
+\subsubsection{2. Detección de Zonas Calientes (Hot Spots)}
 
-\subsubsection{2. Deteccion de Zonas Calientes (Hot Spots)}
-
-Utilizamos una tecnica estadistica llamada \textbf{Getis-Ord Gi*} para identificar zonas donde la concentracion de edificios es significativamente mayor que el promedio. Estas zonas se llaman ``hot spots'' (puntos calientes).
+Utilizamos una técnica estadística llamada \textbf{Getis-Ord Gi*} para identificar zonas donde la concentración de edificios es significativamente mayor que el promedio. Estas zonas se llaman ``hot spots'' (puntos calientes).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{05_density_map.png}
-\caption{Mapa de densidad de edificaciones: los colores mas oscuros indican mayor concentracion de construcciones}
+\caption{Mapa de densidad de edificaciones: los colores más oscuros indican mayor concentración de construcciones}
 \end{figure}
 
-\subsubsection{3. Geoestadistica}
+\subsubsection{3. Geoestadística}
 
-Aplicamos tecnicas geoestadisticas como \textbf{semivariogramas} y \textbf{Kriging} para entender como varia la densidad de construcciones en el espacio y para crear predicciones en zonas donde no tenemos datos directos.
+Aplicamos técnicas geoestadísticas como \textbf{semivariogramas} y \textbf{Kriging} para entender cómo varía la densidad de construcciones en el espacio y para crear predicciones en zonas donde no tenemos datos directos.
 
-El semivariograma nos dice que tan similares son las celdas cercanas entre si: en general, celdas cercanas tienen valores similares, y esta similitud disminuye con la distancia.
+El semivariograma nos dice qué tan similares son las celdas cercanas entre sí: en general, celdas cercanas tienen valores similares, y esta similitud disminuye con la distancia.
 
-\subsubsection{4. Aprendizaje Automatico (Machine Learning)}
-
-Entrenamos modelos de inteligencia artificial para predecir la densidad de edificaciones basandonos en caracteristicas del terreno como:
+\subsubsection{4. Aprendizaje Automático (Machine Learning)}
+Entrenamos modelos de inteligencia artificial para predecir la densidad de edificaciones basándonos en características del terreno como:
 \begin{itemize}
     \item Distancia al centro de la isla
     \item Cantidad de servicios cercanos (restaurantes, tiendas, etc.)
     \item Longitud de calles en la zona
 \end{itemize}
 
-Los mejores resultados los obtuvimos con un modelo llamado \textbf{XGBoost}, que logro predecir correctamente el 88\% de la variacion en la densidad edificatoria.
+Los mejores resultados los obtuvimos con un modelo llamado \textbf{XGBoost}, que logró predecir correctamente el 88\% de la variación en la densidad edificatoria.
 
 %==============================================================================
 \section{Resultados Principales}
 %==============================================================================
 
-\subsection{Patron de Concentracion Urbana}
+\subsection{Patrón de Concentración Urbana}
 
-El hallazgo mas importante es que \textbf{casi todas las construcciones de la isla estan en un solo lugar}: el pueblo de Hanga Roa, en la costa oeste. El 95\% de las edificaciones se concentran en menos del 10\% del territorio de la isla.
+El hallazgo más importante es que \textbf{casi todas las construcciones de la isla están en un solo lugar}: el pueblo de Hanga Roa, en la costa oeste. El 95\% de las edificaciones se concentran en menos del 10\% del territorio de la isla.
 
 Esto tiene implicancias importantes:
 \begin{itemize}
-    \item La presion sobre la infraestructura es muy localizada
-    \item El resto de la isla (donde estan los sitios arqueologicos) permanece relativamente protegido
-    \item Cualquier expansion urbana amenaza directamente las zonas patrimoniales
+    \item La presión sobre la infraestructura es muy localizada
+    \item El resto de la isla (donde están los sitios arqueológicos) permanece relativamente protegido
+    \item Cualquier expansión urbana amenaza directamente las zonas patrimoniales
 \end{itemize}
 
 \subsection{Hot Spots Identificados}
 
-El analisis estadistico identifico tres zonas con concentracion significativa de edificaciones:
+El análisis estadístico identificó tres zonas con concentración significativa de edificaciones:
 
 \begin{table}[H]
 \centering
@@ -192,68 +192,66 @@ Sector residencial sur & 95\% & Viviendas y hospedajes \\
 
 \subsection{Variables que Influyen en la Densidad}
 
-El modelo de aprendizaje automatico nos mostro que factores determinan donde hay mas construcciones:
+El modelo de aprendizaje automático nos mostró qué factores determinan dónde hay más construcciones:
 
 \begin{enumerate}
-    \item \textbf{Distancia al centro} (28\% de influencia): Mientras mas lejos del centro, menos edificios hay
+    \item \textbf{Distancia al centro} (28\% de influencia): Mientras más lejos del centro, menos edificios hay
     \item \textbf{Presencia de servicios} (22\%): Las construcciones se agrupan cerca de comercios y servicios
-    \item \textbf{Red vial} (33\%): Las zonas con mas calles tienen mas edificaciones
-    \item \textbf{Ubicacion geografica} (17\%): El sector oeste de la isla es mas urbanizado
+    \item \textbf{Red vial} (33\%): Las zonas con más calles tienen más edificaciones
+    \item \textbf{Ubicación geográfica} (17\%): El sector oeste de la isla es más urbanizado
 \end{enumerate}
 
-\subsection{Analisis de Redes}
-
-Tambien estudiamos como esta conectada la isla a traves de sus calles. Calculamos medidas de ``centralidad'' que indican que tan importante es cada calle para conectar diferentes partes de la isla.
+\subsection{Análisis de Redes}
+También estudiamos cómo está conectada la isla a través de sus calles. Calculamos medidas de ``centralidad'' que indican qué tan importante es cada calle para conectar diferentes partes de la isla.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.80\textwidth]{network_centrality_analysis.png}
-\caption{Analisis de la red vial: las calles de color mas intenso son mas importantes para la conectividad de la isla}
+\caption{Análisis de la red vial: las calles de color más intenso son más importantes para la conectividad de la isla}
 \end{figure}
 
-Este analisis revela que la calle principal que atraviesa Hanga Roa es critica para la movilidad, y cualquier problema en ella afectaria significativamente el transito de toda la isla.
+Este análisis revela que la calle principal que atraviesa Hanga Roa es crítica para la movilidad, y cualquier problema en ella afectaría significativamente el tránsito de toda la isla.
 
 %==============================================================================
-\section{Aplicacion Web Interactiva}
+\section{Aplicación Web Interactiva}
 %==============================================================================
 
-Creamos una aplicacion web que permite explorar todos estos resultados de forma interactiva. La aplicacion tiene 7 secciones:
+Creamos una aplicación web que permite explorar todos estos resultados de forma interactiva. La aplicación tiene 7 secciones:
 
 \begin{table}[H]
 \centering
 \begin{tabular}{ll}
 \toprule
-\textbf{Seccion} & \textbf{Contenido} \\
+\textbf{Sección} & \textbf{Contenido} \\
 \midrule
-1. Analisis Exploratorio & Estadisticas basicas y mapas \\
-2. Hot Spots & Zonas de concentracion significativa \\
+1. Análisis Exploratorio & Estadísticas básicas y mapas \\
+2. Hot Spots & Zonas de concentración significativa \\
 3. Machine Learning & Entrenar modelos predictivos \\
-4. Resultados ML & Metricas y predicciones \\
+4. Resultados ML & Métricas y predicciones \\
 5. Descargas & Exportar datos y resultados \\
-6. Modelo 3D & Visualizacion tridimensional de densidad \\
-7. Geoestadistica & Semivariogramas y Kriging \\
+6. Modelo 3D & Visualización tridimensional de densidad \\
+7. Geoestadística & Semivariogramas y Kriging \\
 \bottomrule
 \end{tabular}
-\caption{Secciones de la aplicacion web}
+\caption{Secciones de la aplicación web}
 \end{table}
 
-La aplicacion puede accederse localmente en \texttt{http://localhost:8501} despues de ejecutar el sistema con Docker.
+La aplicación puede accederse localmente en \texttt{http://localhost:8501} después de ejecutar el sistema con Docker.
 
 %==============================================================================
 \section{Elementos de Excelencia}
 %==============================================================================
 
-Para complementar el analisis basico, implementamos dos elementos avanzados:
+Para complementar el análisis básico, implementamos dos elementos avanzados:
 
-\subsection{Visualizacion 3D}
+\subsection{Visualización 3D}
 
-Creamos un modelo tridimensional donde la altura de las columnas representa la cantidad de edificaciones en cada zona. Esta visualizacion permite identificar rapidamente las areas de mayor densidad urbana de una forma intuitiva y visual.
+Creamos un modelo tridimensional donde la altura de las columnas representa la cantidad de edificaciones en cada zona. Esta visualización permite identificar rápidamente las áreas de mayor densidad urbana de una forma intuitiva y visual.
+Las columnas más altas y de colores más cálidos (rojo, naranja) indican zonas con mayor concentración, mientras que las columnas bajas y amarillas representan áreas con pocas construcciones.
 
-Las columnas mas altas y de colores mas calidos (rojo, naranja) indican zonas con mayor concentracion, mientras que las columnas bajas y amarillas representan areas con pocas construcciones.
+\subsection{Análisis de Redes}
 
-\subsection{Analisis de Redes}
-
-Implementamos un analisis avanzado de la red vial utilizando teoria de grafos. Esto nos permite:
+Implementamos un análisis avanzado de la red vial utilizando teoría de grafos. Esto nos permite:
 \begin{itemize}
     \item Calcular la centralidad de cada calle
     \item Identificar cuellos de botella en la conectividad
@@ -267,20 +265,20 @@ Implementamos un analisis avanzado de la red vial utilizando teoria de grafos. E
 \subsection{Que Aprendimos}
 
 \begin{enumerate}
-    \item \textbf{Concentracion extrema}: Isla de Pascua tiene un patron de desarrollo urbano muy concentrado, con casi toda la actividad en Hanga Roa
-    \item \textbf{Presion localizada}: Los problemas de capacidad de carga afectan principalmente a un sector pequeno de la isla
-    \item \textbf{Predictibilidad}: Es posible predecir la densidad edificatoria usando caracteristicas geograficas simples
-    \item \textbf{Vulnerabilidad vial}: La red de calles tiene puntos criticos que podrian afectar la movilidad
+    \item \textbf{Concentracion extrema}: Isla de Pascua tiene un patrón de desarrollo urbano muy concentrado, con casi toda la actividad en Hanga Roa
+    \item \textbf{Presión localizada}: Los problemas de capacidad de carga afectan principalmente a un sector pequeño de la isla
+    \item \textbf{Predictibilidad}: Es posible predecir la densidad edificatoria usando características geográficas simples
+    \item \textbf{Vulnerabilidad vial}: La red de calles tiene puntos críticos que podrían afectar la movilidad
 \end{enumerate}
 
-\subsection{Utilidad Practica}
+\subsection{Utilidad Práctica}
 
 Este proyecto puede ayudar a:
 \begin{itemize}
-    \item \textbf{Planificadores urbanos}: Identificar zonas para expansion controlada
+    \item \textbf{Planificadores urbanos}: Identificar zonas para expansión controlada
     \item \textbf{Autoridades}: Monitorear el crecimiento y comparar con la capacidad de carga
-    \item \textbf{Investigadores}: Entender patrones de ocupacion en territorios insulares
-    \item \textbf{Comunidad}: Visualizar como esta distribuido el desarrollo en su isla
+    \item \textbf{Investigadores}: Entender patrones de ocupación en territorios insulares
+    \item \textbf{Comunidad}: Visualizar cómo está distribuido el desarrollo en su isla
 \end{itemize}
 
 \subsection{Cumplimiento de Requisitos}
@@ -295,17 +293,17 @@ El proyecto cumple con todos los componentes requeridos por el laboratorio:
 \midrule
 Ambiente Docker/PostGIS & 10\% & Completado \\
 Datos multi-fuente & 20\% & Completado \\
-Analisis Exploratorio (ESDA) & 20\% & Completado \\
-Geoestadistica & 15\% & Completado \\
+Análisis Exploratorio (ESDA) & 20\% & Completado \\
+Geoestadística & 15\% & Completado \\
 Machine Learning & 20\% & Completado \\
-Aplicacion Web & 15\% & Completado \\
+Aplicación Web & 15\% & Completado \\
 \midrule
 \textbf{Total} & \textbf{100\%} & \textbf{Completado} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Ademas, incluimos 2 de los 3 elementos de excelencia requeridos: Visualizacion 3D y Analisis de Redes.
+Además, incluimos 2 de los 3 elementos de excelencia requeridos: Visualización 3D y Análisis de Redes.
 
 %==============================================================================
 \section{Referencias}
@@ -317,6 +315,13 @@ Ademas, incluimos 2 de los 3 elementos de excelencia requeridos: Visualizacion 3
     \item Anselin, L. (1995). Local indicators of spatial association-LISA. \textit{Geographical Analysis}.
     \item OpenStreetMap Contributors (2024). OpenStreetMap. \url{https://www.openstreetmap.org}
     \item PostGIS Project (2023). PostGIS Documentation. \url{https://postgis.net}
+    \item Getis, A., \& Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. \textit{Geographical Analysis}, 24(3), 189-206.
+    \item GeoPandas Development Team. (2023). GeoPandas: Python tools for geographic data. \url{https://geopandas.org}
+    \item Rey, S. J., \& Anselin, L. (2007). PySAL: A Python library of spatial analytical methods. \textit{The Review of Regional Studies}, 37(1), 5-27.
+    \item Breiman, L. (2001). Random forests. \textit{Machine Learning}, 45(1), 5-32.
+    \item Chen, T., \& Guestrin, C. (2016). XGBoost: A scalable tree boosting system. \textit{Proceedings of KDD}, 785-794.
+    \item INE Chile. (2017). Censo de Población y Vivienda 2017. Instituto Nacional de Estadísticas.
+    \item MINAGRI (2017). Sistema de Información Territorial de Rapa Nui. \url{https://minagri.gob.cl/servicios/sistema-de-informacion-territorial-de-rapa-nui/}
 \end{enumerate}
 
 \end{document}
