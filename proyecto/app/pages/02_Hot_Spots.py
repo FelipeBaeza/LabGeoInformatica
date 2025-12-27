@@ -1,5 +1,6 @@
 """
 Página de Análisis de Hot Spots (Getis-Ord Gi*)
+Optimizado para rendimiento con spatial joins vectorizados
 """
 import streamlit as st
 import geopandas as gpd
@@ -11,6 +12,7 @@ from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 from shapely.geometry import box
 import os
+from sqlalchemy import create_engine
 
 # Intentar importar librerías de análisis espacial
 try:
@@ -20,41 +22,55 @@ try:
 except ImportError:
     SPATIAL_LIBS = False
 
-# Configuración
-st.set_page_config(page_title="Análisis Hot Spots", page_icon="🔥", layout="wide")
-st.title("🔥 Análisis de Hot Spots")
+# Configuracion
+st.set_page_config(page_title="Analisis Hot Spots", page_icon=None, layout="wide")
+st.title("Analisis de Hot Spots")
 st.markdown("---")
 
-# Rutas
-BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(os.path.dirname(BASE_PATH), 'data', 'raw', 'isla_de_pascua')
 CRS_UTM = 'EPSG:32719'
+
+DB_CONFIG = {
+    'host': os.getenv('POSTGRES_HOST', 'localhost'),
+    'port': os.getenv('POSTGRES_PORT', '55432'),
+    'database': os.getenv('POSTGRES_DB', 'geodatabase'),
+    'user': os.getenv('POSTGRES_USER', 'geouser'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'geopass123'),
+}
+
+
+def get_engine():
+    return create_engine(
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+        f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+    )
 
 @st.cache_data
 def load_data():
-    """Cargar datos geoespaciales"""
+    """Cargar datos geoespaciales desde PostGIS"""
     data = {}
-    files = {
-        'boundary': 'isla_de_pascua_boundary.geojson',
-        'buildings': 'isla_de_pascua_buildings.geojson',
-        'amenities': 'isla_de_pascua_amenities.geojson',
-        'streets': 'isla_de_pascua_streets.geojson',
+    tables = {
+        'boundary': 'limite_administrativa',
+        'buildings': 'area_construcciones',
+        'amenities': 'punto_interes',
+        'streets': 'linea_calles',
     }
-    
-    for key, filename in files.items():
-        filepath = os.path.join(DATA_PATH, filename)
-        if os.path.exists(filepath):
-            try:
-                data[key] = gpd.read_file(filepath)
-            except Exception as e:
-                pass
-    
+
+    engine = get_engine()
+    for key, table in tables.items():
+        try:
+            data[key] = gpd.read_postgis(
+                f"SELECT * FROM geoanalisis.{table}", engine, geom_col='geometry'
+            )
+        except Exception as e:
+            st.warning(f"Error cargando {table}: {e}")
+
     return data
 
+
 @st.cache_data
-def create_grid(boundary_gdf, cell_size=200):
-    """Crear grilla de análisis"""
-    boundary_utm = boundary_gdf.to_crs(CRS_UTM)
+def create_grid(_boundary_gdf, cell_size=200):
+    """Crear grilla de análisis (cacheado)"""
+    boundary_utm = _boundary_gdf.to_crs(CRS_UTM)
     minx, miny, maxx, maxy = boundary_utm.total_bounds
     
     cells = []
@@ -72,24 +88,40 @@ def create_grid(boundary_gdf, cell_size=200):
     
     return grid
 
-def count_features_in_cells(grid, features_gdf, column_name='count'):
-    """Contar features en cada celda de la grilla"""
-    features_utm = features_gdf.to_crs(CRS_UTM)
+
+@st.cache_data
+def count_features_in_cells_optimized(_grid, _features_gdf, column_name='count'):
+    """Contar features en cada celda usando spatial join optimizado (MUCHO MÁS RÁPIDO)"""
+    # Copiar grid para no modificar el original
+    grid = _grid.copy()
+    features_utm = _features_gdf.to_crs(CRS_UTM)
     
     # Para polígonos, usar centroide
     if 'Polygon' in str(features_utm.geometry.geom_type.iloc[0]):
-        features_utm['point'] = features_utm.geometry.centroid
-        features_points = gpd.GeoDataFrame(features_utm, geometry='point', crs=CRS_UTM)
+        features_points = features_utm.copy()
+        features_points['geometry'] = features_points.geometry.centroid
     else:
-        features_points = features_utm
+        features_points = features_utm.copy()
     
-    grid[column_name] = 0
+    # Resetear índices para el join
+    features_points = features_points.reset_index(drop=True)
+    grid = grid.reset_index(drop=True)
     
-    for idx, cell in grid.iterrows():
-        count = len(features_points[features_points.geometry.within(cell.geometry)])
-        grid.loc[idx, column_name] = count
+    # Usar spatial join vectorizado (mucho más rápido que loop)
+    try:
+        joined = gpd.sjoin(features_points, grid[['cell_id', 'geometry']], 
+                          how='inner', predicate='within')
+        counts = joined.groupby('cell_id').size().reset_index(name=column_name)
+        
+        # Merge back to grid
+        grid = grid.merge(counts, on='cell_id', how='left')
+        grid[column_name] = grid[column_name].fillna(0).astype(int)
+    except Exception:
+        # Fallback: si spatial join falla, inicializar en 0
+        grid[column_name] = 0
     
     return grid
+
 
 # Cargar datos
 try:
@@ -100,7 +132,7 @@ try:
         st.stop()
     
     # Sidebar
-    st.sidebar.header("🔥 Opciones de Hot Spots")
+    st.sidebar.header("Opciones de Hot Spots")
     
     # Seleccionar capa
     available_layers = [k for k in data.keys() if k != 'boundary']
@@ -117,7 +149,7 @@ try:
     cell_size = st.sidebar.slider("Tamaño de celda (metros)", 100, 500, 200, 50)
     
     # Tabs
-    tab1, tab2, tab3 = st.tabs(["🔥 Mapa de Calor", "📊 Getis-Ord Gi*", "📈 Estadísticas"])
+    tab1, tab2, tab3 = st.tabs(["Mapa de Calor", "Getis-Ord Gi*", "Estadisticas"])
     
     with tab1:
         st.subheader("Mapa de Calor")
@@ -161,13 +193,30 @@ try:
         st.subheader("Análisis Getis-Ord Gi* (Hot Spot Analysis)")
         
         if not SPATIAL_LIBS:
-            st.warning("⚠️ Las librerías de análisis espacial (libpysal, esda) no están instaladas.")
+            st.warning("Las librerias de analisis espacial (libpysal, esda) no estan instaladas.")
             st.info("Instale con: pip install libpysal esda")
+            st.markdown("---")
+            st.markdown("**Alternativa: Mapa de densidad por celdas**")
+            
+            # Mostrar mapa de densidad como alternativa
+            with st.spinner("Calculando densidad..."):
+                grid = create_grid(data['boundary'], cell_size)
+                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
+            
+            fig, ax = plt.subplots(figsize=(10, 10))
+            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
+                                                   edgecolor='black', linewidth=2)
+            grid.plot(column='n_features', ax=ax, cmap='YlOrRd', legend=True,
+                     legend_kwds={'label': 'N° features'})
+            ax.set_title(f'Densidad de {selected_layer}', fontsize=12, fontweight='bold')
+            ax.set_axis_off()
+            st.pyplot(fig)
+            plt.close(fig)
         else:
-            # Crear grilla
+            # Crear grilla con cálculo optimizado
             with st.spinner("Creando grilla de análisis..."):
                 grid = create_grid(data['boundary'], cell_size)
-                grid = count_features_in_cells(grid, data[selected_layer], 'n_features')
+                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
             
             st.info(f"Grilla creada: {len(grid)} celdas de {cell_size}m x {cell_size}m")
             
@@ -209,6 +258,7 @@ try:
                             ax.set_title('Estadístico Getis-Ord Gi*', fontsize=12, fontweight='bold')
                             ax.set_axis_off()
                             st.pyplot(fig)
+                            plt.close(fig)
                         
                         with col2:
                             st.markdown("**Clasificación de Hot/Cold Spots**")
@@ -234,10 +284,11 @@ try:
                             ax.set_title('Clasificación Hot/Cold Spots', fontsize=12, fontweight='bold')
                             ax.set_axis_off()
                             st.pyplot(fig)
+                            plt.close(fig)
                         
                         # Resumen
                         st.markdown("---")
-                        st.markdown("**📊 Resumen de Hot/Cold Spots**")
+                        st.markdown("**Resumen de Hot/Cold Spots**")
                         summary = grid_analysis['hotspot_type'].value_counts()
                         st.dataframe(summary, use_container_width=True)
                         
@@ -247,39 +298,47 @@ try:
     with tab3:
         st.subheader("Estadísticas de Densidad")
         
-        # Crear grilla
-        grid = create_grid(data['boundary'], cell_size)
-        grid = count_features_in_cells(grid, data[selected_layer], 'n_features')
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Distribución de Densidad por Celda**")
-            fig, ax = plt.subplots(figsize=(8, 5))
-            grid['n_features'].hist(bins=30, ax=ax, color='coral', edgecolor='white')
-            ax.set_xlabel('Número de features por celda')
-            ax.set_ylabel('Frecuencia')
-            ax.set_title(f'Histograma de Densidad - {selected_layer}')
+        try:
+            # Usar la función optimizada con cache
+            with st.spinner("Calculando densidad..."):
+                grid = create_grid(data['boundary'], cell_size)
+                grid = count_features_in_cells_optimized(grid, data[selected_layer], 'n_features')
+            
+            st.success(f"Grilla creada: {len(grid)} celdas")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Distribución de Densidad por Celda**")
+                fig, ax = plt.subplots(figsize=(8, 5))
+                grid['n_features'].hist(bins=30, ax=ax, color='coral', edgecolor='white')
+                ax.set_xlabel('Número de features por celda')
+                ax.set_ylabel('Frecuencia')
+                ax.set_title(f'Histograma de Densidad - {selected_layer}')
+                st.pyplot(fig)
+                plt.close(fig)
+            
+            with col2:
+                st.markdown("**Estadísticas**")
+                stats = grid['n_features'].describe()
+                st.dataframe(pd.DataFrame(stats).round(2))
+            
+            # Mapa de densidad
+            st.markdown("---")
+            st.markdown("**Mapa de Densidad por Celda**")
+            
+            fig, ax = plt.subplots(figsize=(12, 10))
+            data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
+                                                   edgecolor='black', linewidth=2)
+            grid.plot(column='n_features', ax=ax, cmap='YlOrRd', legend=True,
+                     legend_kwds={'label': 'N° features'})
+            ax.set_title(f'Densidad de {selected_layer.replace("_", " ").title()}', 
+                        fontsize=14, fontweight='bold')
+            ax.set_axis_off()
             st.pyplot(fig)
-        
-        with col2:
-            st.markdown("**Estadísticas**")
-            stats = grid['n_features'].describe()
-            st.dataframe(pd.DataFrame(stats).round(2))
-        
-        # Mapa de densidad
-        st.markdown("---")
-        st.markdown("**Mapa de Densidad por Celda**")
-        
-        fig, ax = plt.subplots(figsize=(12, 10))
-        data['boundary'].to_crs(CRS_UTM).plot(ax=ax, facecolor='none', 
-                                               edgecolor='black', linewidth=2)
-        grid.plot(column='n_features', ax=ax, cmap='YlOrRd', legend=True,
-                 legend_kwds={'label': 'N° features'})
-        ax.set_title(f'Densidad de {selected_layer.replace("_", " ").title()}', 
-                    fontsize=14, fontweight='bold')
-        ax.set_axis_off()
-        st.pyplot(fig)
+            plt.close(fig)
+        except Exception as e:
+            st.error(f"Error en estadísticas: {e}")
 
 except Exception as e:
     st.error(f"Error: {e}")

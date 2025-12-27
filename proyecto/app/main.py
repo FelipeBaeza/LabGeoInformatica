@@ -23,8 +23,8 @@ load_dotenv()
 
 # Configuración de página
 st.set_page_config(
-    page_title="GeoAnálisis - Geoinformática",
-    page_icon="🗺️",
+    page_title="Analisis Territorial - Isla de Pascua",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -196,7 +196,7 @@ def create_statistics_charts(gdf, column):
     fig_hist = px.histogram(
         gdf,
         x=column,
-        title=f'Distribución de {column}',
+        title=f'Distribucion de {column}',
         template='plotly_white'
     )
     
@@ -215,16 +215,16 @@ def create_statistics_charts(gdf, column):
 
 def page_home():
     """Página principal."""
-    st.markdown('<h1 class="main-header">🗺️ GeoAnálisis Comunal</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Analisis Territorial - Isla de Pascua</h1>', unsafe_allow_html=True)
     
     st.markdown("""
-    ### Bienvenido al Sistema de Análisis Geoespacial
+    ### Sistema de Analisis Geoespacial
     
-    Esta aplicación permite:
-    - 📊 **Visualizar** datos geoespaciales de comunas
-    - 📈 **Analizar** patrones espaciales
-    - 🔍 **Explorar** diferentes capas de información
-    - 📉 **Generar** estadísticas y reportes
+    Esta aplicacion permite:
+    - **Visualizar** datos geoespaciales de la comuna
+    - **Analizar** patrones espaciales
+    - **Explorar** diferentes capas de informacion
+    - **Generar** estadisticas y reportes
     
     ---
     """)
@@ -236,16 +236,16 @@ def page_home():
     
     with col1:
         if connected:
-            st.success(f"✅ Conectado a PostGIS v{info}")
+            st.success(f"Conectado a PostGIS v{info}")
         else:
-            st.error("❌ Sin conexión a PostGIS")
+            st.error("Sin conexion a PostGIS")
     
     with col2:
         tables = get_available_tables()
-        st.info(f"📋 {len(tables)} capas disponibles")
+        st.info(f"{len(tables)} capas disponibles")
     
     with col3:
-        st.info("🗓️ Última actualización: Hoy")
+        st.info("Ultima actualizacion: Hoy")
     
     # Mostrar tablas disponibles
     if tables:
@@ -258,11 +258,11 @@ def page_home():
 
 def page_map_viewer():
     """Página de visualización de mapas."""
-    st.header("🗺️ Visor de Mapas")
+    st.header("Visor de Mapas")
     
     # Sidebar para controles
     with st.sidebar:
-        st.subheader("Configuración del Mapa")
+        st.subheader("Configuracion del Mapa")
         
         # Selección de fuente de datos
         data_source = st.radio(
@@ -298,7 +298,7 @@ def page_map_viewer():
         with col1:
             st.metric("Registros", len(gdf))
         with col2:
-            st.metric("Tipo de geometría", gdf.geometry.iloc[0].geom_type)
+            st.metric("Tipo de geometria", gdf.geometry.iloc[0].geom_type)
         with col3:
             st.metric("CRS", str(gdf.crs))
         
@@ -318,7 +318,7 @@ def page_map_viewer():
             st_folium(m, width=None, height=600)
         
         # Mostrar tabla de atributos
-        with st.expander("📊 Ver tabla de atributos"):
+        with st.expander("Ver tabla de atributos"):
             # Excluir columna de geometría para mostrar
             display_df = gdf.drop(columns=['geometry'])
             st.dataframe(display_df, use_container_width=True)
@@ -328,28 +328,28 @@ def page_map_viewer():
 
 def page_spatial_analysis():
     """Página de análisis espacial."""
-    st.header("📊 Análisis Espacial")
+    st.header("Analisis Espacial")
     
     tables = get_available_tables()
     
     if not tables:
-        st.warning("No hay datos disponibles para análisis")
+        st.warning("No hay datos disponibles para analisis")
         return
     
-    selected_table = st.selectbox("Seleccionar capa para análisis", tables)
+    selected_table = st.selectbox("Seleccionar capa para analisis", tables)
     
     if selected_table:
         with st.spinner("Cargando datos..."):
             gdf = load_geodata(selected_table)
         
         if gdf is not None:
-            st.subheader("Estadísticas Descriptivas")
+            st.subheader("Estadisticas Descriptivas")
             
             # Estadísticas generales
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("**Información geométrica**")
+                st.markdown("**Informacion geometrica**")
                 
                 # Calcular áreas si es polígono
                 if gdf.geometry.iloc[0].geom_type in ['Polygon', 'MultiPolygon']:
@@ -358,21 +358,21 @@ def page_spatial_analysis():
                     gdf['area_m2'] = gdf_proj.geometry.area
                     gdf['area_ha'] = gdf['area_m2'] / 10000
                     
-                    st.metric("Área total (ha)", f"{gdf['area_ha'].sum():,.2f}")
-                    st.metric("Área promedio (ha)", f"{gdf['area_ha'].mean():,.2f}")
+                    st.metric("Area total (ha)", f"{gdf['area_ha'].sum():,.2f}")
+                    st.metric("Area promedio (ha)", f"{gdf['area_ha'].mean():,.2f}")
                 
                 st.metric("Total de entidades", len(gdf))
             
             with col2:
-                st.markdown("**Columnas numéricas**")
+                st.markdown("**Columnas numericas**")
                 numeric_cols = gdf.select_dtypes(include=['float64', 'int64']).columns.tolist()
                 
                 if numeric_cols:
                     selected_col = st.selectbox("Variable a analizar", numeric_cols)
                     
                     st.metric("Media", f"{gdf[selected_col].mean():,.2f}")
-                    st.metric("Desv. Estándar", f"{gdf[selected_col].std():,.2f}")
-                    st.metric("Mín - Máx", f"{gdf[selected_col].min():,.2f} - {gdf[selected_col].max():,.2f}")
+                    st.metric("Desv. Estandar", f"{gdf[selected_col].std():,.2f}")
+                    st.metric("Min - Max", f"{gdf[selected_col].min():,.2f} - {gdf[selected_col].max():,.2f}")
             
             # Gráficos
             if numeric_cols and 'selected_col' in locals():
@@ -389,50 +389,36 @@ def page_spatial_analysis():
 
 def page_about():
     """Página de información."""
-    st.header("ℹ️ Acerca del Proyecto")
+    st.header("Acerca del Proyecto")
     
     st.markdown("""
-    ### Laboratorio de Geoinformática
+    ### Laboratorio de Geoinformatica
     
-    Este proyecto forma parte del curso de Geoinformática y tiene como objetivo
+    Este proyecto forma parte del curso de Geoinformatica y tiene como objetivo
     desarrollar habilidades en:
     
     - **Manejo de datos geoespaciales** con Python
     - **Bases de datos espaciales** con PostGIS
-    - **Análisis espacial** y geoestadística
-    - **Visualización** de datos geográficos
+    - **Analisis espacial** y geoestadistica
+    - **Visualizacion** de datos geograficos
     - **Desarrollo web** con Streamlit
     
     ---
     
-    ### Tecnologías utilizadas
+    ### Tecnologias utilizadas
     
-    | Tecnología | Uso |
+    | Tecnologia | Uso |
     |------------|-----|
     | Python | Lenguaje principal |
     | GeoPandas | Manejo de datos espaciales |
     | PostGIS | Base de datos espacial |
     | Folium | Mapas interactivos |
-    | Streamlit | Aplicación web |
-    | Docker | Contenedorización |
+    | Streamlit | Aplicacion web |
+    | Docker | Contenedorizacion |
     
     ---
     
-    ### Estructura del proyecto
-    
-    ```
-    proyecto/
-    ├── app/            # Aplicación Streamlit
-    ├── data/           # Datos (raw y processed)
-    ├── docker/         # Configuración Docker
-    ├── notebooks/      # Jupyter notebooks
-    ├── scripts/        # Scripts de utilidad
-    └── outputs/        # Resultados y figuras
-    ```
-    
-    ---
-    
-    **Universidad** | Curso de Geoinformática | 2024
+    **Universidad de Santiago de Chile** | Geoinformatica 2024
     """)
 
 
@@ -442,13 +428,13 @@ def main():
     """Función principal de la aplicación."""
     
     # Sidebar - Navegación
-    st.sidebar.title("🧭 Navegación")
+    st.sidebar.title("Navegacion")
     
     pages = {
-        "🏠 Inicio": page_home,
-        "🗺️ Visor de Mapas": page_map_viewer,
-        "📊 Análisis Espacial": page_spatial_analysis,
-        "ℹ️ Acerca de": page_about
+        "Inicio": page_home,
+        "Visor de Mapas": page_map_viewer,
+        "Analisis Espacial": page_spatial_analysis,
+        "Acerca de": page_about
     }
     
     selected_page = st.sidebar.radio("Ir a", list(pages.keys()))
@@ -458,8 +444,8 @@ def main():
     
     # Footer
     st.sidebar.markdown("---")
-    st.sidebar.markdown("**GeoAnálisis v1.0**")
-    st.sidebar.markdown("Geoinformática 2024")
+    st.sidebar.markdown("**Analisis Territorial v1.0**")
+    st.sidebar.markdown("Geoinformatica 2024")
 
 
 if __name__ == "__main__":

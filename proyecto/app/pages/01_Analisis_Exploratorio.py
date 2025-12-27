@@ -9,38 +9,54 @@ import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import st_folium
 import os
+from sqlalchemy import create_engine
 
-# Configuración
-st.set_page_config(page_title="Análisis Exploratorio", page_icon="📊", layout="wide")
-st.title("📊 Análisis Exploratorio de Datos Espaciales")
+# Configuracion
+st.set_page_config(page_title="Analisis Exploratorio", page_icon=None, layout="wide")
+st.title("Analisis Exploratorio de Datos Espaciales")
 st.markdown("---")
 
-# Rutas
-BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(os.path.dirname(BASE_PATH), 'data', 'raw', 'isla_de_pascua')
 CRS_UTM = 'EPSG:32719'
+
+DB_CONFIG = {
+    'host': os.getenv('POSTGRES_HOST', 'localhost'),
+    'port': os.getenv('POSTGRES_PORT', '55432'),
+    'database': os.getenv('POSTGRES_DB', 'geodatabase'),
+    'user': os.getenv('POSTGRES_USER', 'geouser'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'geopass123'),
+}
+
+
+def get_engine():
+    return create_engine(
+        f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+        f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+    )
+
 
 @st.cache_data
 def load_data():
-    """Cargar todos los datos geoespaciales"""
+    """Cargar datos desde PostGIS"""
     data = {}
-    geojson_files = {
-        'boundary': 'isla_de_pascua_boundary.geojson',
-        'buildings': 'isla_de_pascua_buildings.geojson',
-        'amenities': 'isla_de_pascua_amenities.geojson',
-        'streets': 'isla_de_pascua_streets.geojson',
-        'green_areas': 'isla_de_pascua_green_areas.geojson',
+    tables = {
+        'boundary': 'limite_administrativa',
+        'buildings': 'area_construcciones',
+        'amenities': 'punto_interes',
+        'streets': 'linea_calles',
+        'green_areas': 'area_naturaleza_playas',
     }
-    
-    for key, filename in geojson_files.items():
-        filepath = os.path.join(DATA_PATH, filename)
-        if os.path.exists(filepath):
-            try:
-                gdf = gpd.read_file(filepath)
+
+    engine = get_engine()
+    for key, table in tables.items():
+        try:
+            gdf = gpd.read_postgis(
+                f"SELECT * FROM geoanalisis.{table}", engine, geom_col='geometry'
+            )
+            if len(gdf) > 0:
                 data[key] = gdf
-            except Exception as e:
-                st.warning(f"Error cargando {filename}: {e}")
-    
+        except Exception as e:
+            st.warning(f"Error cargando {table}: {e}")
+
     return data
 
 # Cargar datos
@@ -52,7 +68,7 @@ try:
         st.stop()
     
     # Sidebar
-    st.sidebar.header("📊 Opciones de Análisis")
+    st.sidebar.header("Opciones de Analisis")
     
     layer_options = list(data.keys())
     selected_layer = st.sidebar.selectbox(
@@ -64,7 +80,7 @@ try:
     gdf = data[selected_layer]
     
     # Tabs principales
-    tab1, tab2, tab3 = st.tabs(["📋 Estadísticas", "🗺️ Mapa", "📈 Visualizaciones"])
+    tab1, tab2, tab3 = st.tabs(["Estadisticas", "Mapa", "Visualizaciones"])
     
     with tab1:
         st.subheader(f"Estadísticas: {selected_layer.replace('_', ' ').title()}")
@@ -83,7 +99,7 @@ try:
         st.markdown("---")
         
         # Columnas disponibles
-        st.subheader("📋 Columnas del Dataset")
+        st.subheader("Columnas del Dataset")
         cols_df = pd.DataFrame({
             'Columna': gdf.columns.tolist(),
             'Tipo': [str(gdf[col].dtype) for col in gdf.columns],
@@ -92,14 +108,14 @@ try:
         st.dataframe(cols_df, use_container_width=True)
         
         # Muestra de datos
-        st.subheader("🔍 Muestra de Datos")
+        st.subheader("Muestra de Datos")
         n_samples = st.slider("Número de registros", 5, min(50, len(gdf)), 10)
         st.dataframe(gdf.drop(columns=['geometry']).head(n_samples), use_container_width=True)
         
         # Estadísticas numéricas
         numeric_cols = gdf.select_dtypes(include=[np.number]).columns.tolist()
         if numeric_cols:
-            st.subheader("📊 Estadísticas Numéricas")
+            st.subheader("Estadisticas Numericas")
             st.dataframe(gdf[numeric_cols].describe(), use_container_width=True)
         
         # Estadísticas categóricas
@@ -107,7 +123,7 @@ try:
         categorical_cols = [c for c in categorical_cols if c != 'geometry']
         
         if categorical_cols:
-            st.subheader("📝 Variables Categóricas")
+            st.subheader("Variables Categoricas")
             selected_cat = st.selectbox("Seleccionar variable:", categorical_cols)
             if selected_cat:
                 value_counts = gdf[selected_cat].value_counts().head(15)
@@ -175,7 +191,7 @@ try:
         st_folium(m, width=None, height=600)
     
     with tab3:
-        st.subheader("📈 Visualizaciones")
+        st.subheader("Visualizaciones")
         
         # Área (para polígonos)
         gdf_utm = gdf.to_crs(CRS_UTM)
