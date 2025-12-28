@@ -19,21 +19,27 @@ BEGIN
     RAISE NOTICE 'PostGIS configurado correctamente para el proyecto!';
 END $$;
 
--- Load data from SQL files
-\i '/data/Datos SQL/area_construcciones.sql'
-\i '/data/Datos SQL/area_estacionamiento.sql'
-\i '/data/Datos SQL/area_interes.sql'
-\i '/data/Datos SQL/area_naturaleza_playas.sql'
-\i '/data/Datos SQL/area_religiosa.sql'
-\i '/data/Datos SQL/area_reserva_agua.sql'
-\i '/data/Datos SQL/area_transporte.sql'
-\i '/data/Datos SQL/area_uso_de_tierra_agua.sql'
-\i '/data/Datos SQL/linea_calles.sql'
-\i '/data/Datos SQL/linea_flujo_agua.sql'
-\i '/data/Datos SQL/mapa_comuna.sql'
-\i '/data/Datos SQL/punto_atraccion_turistica.sql'
-\i '/data/Datos SQL/punto_interes.sql'
-\i '/data/Datos SQL/punto_naturaleza.sql'
-\i '/data/Datos SQL/punto_religioso.sql'
-\i '/data/Datos SQL/punto_trafico.sql'
-\i '/data/Datos SQL/punto_transporte.sql'
+-- Load data from SQL files (usando ruta del volumen montado)
+\i '/datos_sql/area_construcciones.sql'
+\i '/datos_sql/area_estacionamiento.sql'
+\i '/datos_sql/area_interes.sql'
+\i '/datos_sql/area_naturaleza_playas.sql'
+\i '/datos_sql/area_religiosa.sql'
+\i '/datos_sql/area_reserva_agua.sql'
+\i '/datos_sql/area_transporte.sql'
+\i '/datos_sql/area_uso_de_tierra_agua.sql'
+\i '/datos_sql/linea_calles.sql'
+\i '/datos_sql/linea_flujo_agua.sql'
+\i '/datos_sql/mapa_comuna.sql'
+\i '/datos_sql/punto_atraccion_turistica.sql'
+\i '/datos_sql/punto_interes.sql'
+\i '/datos_sql/punto_naturaleza.sql'
+\i '/datos_sql/punto_religioso.sql'
+\i '/datos_sql/punto_trafico.sql'
+\i '/datos_sql/punto_transporte.sql'
+
+-- Mensaje final
+DO $$
+BEGIN
+    RAISE NOTICE 'Datos SQL cargados correctamente!';
+END $$;

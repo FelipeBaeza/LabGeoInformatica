@@ -289,7 +289,7 @@ response = requests.get("http://localhost:8000/api/tables")
 tables = response.json()
 
 # Obtener datos
-response = requests.get("http://localhost:8000/api/data/area_construcciones?limit=100")
+response = requests.get("http://localhost:8000/api/data/isla_de_pascua_buildings?limit=100")
 data = response.json()
 
 # Predicción

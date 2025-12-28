@@ -24,37 +24,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_RAW_DIR = BASE_DIR / "data" / "raw"
 
 # Configuración de base de datos (valores por defecto)
+# Primero intenta leer de variables de entorno (útil para contenedores)
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': '55432',
-    'database': 'geodatabase',
-    'user': 'geouser',
-    'password': 'geopass123'
+    'host': os.environ.get('POSTGRES_HOST', 'localhost'),
+    'port': os.environ.get('POSTGRES_PORT', '55432'),
+    'database': os.environ.get('POSTGRES_DB', 'geodatabase'),
+    'user': os.environ.get('POSTGRES_USER', 'geouser'),
+    'password': os.environ.get('POSTGRES_PASSWORD', 'geopass123')
 }
 
-# Intentar cargar desde .env si existe
-try:
-    env_path = BASE_DIR / ".env"
-    if env_path.exists():
-        with open(env_path, 'r', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    key = key.strip()
-                    value = value.strip()
-        if key == 'POSTGRES_HOST':
-            DB_CONFIG['host'] = value
-        elif key == 'POSTGRES_PORT':
-            DB_CONFIG['port'] = value
-        elif key == 'POSTGRES_DB':
-            DB_CONFIG['database'] = value
-        elif key == 'POSTGRES_USER':
-            DB_CONFIG['user'] = value
-        elif key == 'POSTGRES_PASSWORD':
-            DB_CONFIG['password'] = value
-except Exception:
-    pass  # Usar valores por defecto
+# Si no hay variables de entorno, intentar cargar desde .env
+if DB_CONFIG['host'] == 'localhost':
+    try:
+        env_path = BASE_DIR / ".env"
+        if env_path.exists():
+            with open(env_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        if key == 'POSTGRES_HOST':
+                            DB_CONFIG['host'] = value
+                        elif key == 'POSTGRES_PORT':
+                            DB_CONFIG['port'] = value
+                        elif key == 'POSTGRES_DB':
+                            DB_CONFIG['database'] = value
+                        elif key == 'POSTGRES_USER':
+                            DB_CONFIG['user'] = value
+                        elif key == 'POSTGRES_PASSWORD':
+                            DB_CONFIG['password'] = value
+    except Exception:
+        pass  # Usar valores por defecto
+
 
 
 def get_db_engine():

@@ -133,6 +133,19 @@ def create_map(gdf, column=None, style='default'):
     if gdf is None or gdf.empty:
         return None
     
+    # Convertir columnas datetime/timestamp a string para serialización JSON
+    gdf = gdf.copy()
+    for col in gdf.columns:
+        if col != 'geometry':
+            if pd.api.types.is_datetime64_any_dtype(gdf[col]):
+                gdf[col] = gdf[col].astype(str)
+            elif gdf[col].dtype == 'object':
+                # Verificar si hay objetos Timestamp en columnas object
+                try:
+                    gdf[col] = gdf[col].apply(lambda x: str(x) if hasattr(x, 'isoformat') else x)
+                except:
+                    pass
+    
     # Calcular centroide
     centroid = gdf.geometry.unary_union.centroid
     

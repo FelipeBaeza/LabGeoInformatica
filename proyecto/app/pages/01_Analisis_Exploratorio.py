@@ -45,10 +45,10 @@ def load_data():
     """Cargar datos desde PostGIS."""
     data = {}
     tables = {
-        'boundary': 'limite_administrativa',
-        'buildings': 'area_construcciones',
-        'amenities': 'punto_interes',
-        'streets': 'linea_calles',
+        'boundary': 'isla_de_pascua_boundary',
+        'buildings': 'isla_de_pascua_buildings',
+        'amenities': 'isla_de_pascua_amenities',
+        'streets': 'isla_de_pascua_streets',
     }
     
     try:

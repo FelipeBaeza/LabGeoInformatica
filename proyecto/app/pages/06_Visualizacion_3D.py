@@ -46,7 +46,7 @@ def load_buildings():
     try:
         engine = get_engine()
         gdf = gpd.read_postgis(
-            "SELECT * FROM geoanalisis.area_construcciones", 
+            "SELECT * FROM geoanalisis.isla_de_pascua_buildings", 
             engine, geom_col='geometry'
         )
         return gdf

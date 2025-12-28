@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de datos espacial PostGIS
   postgis:
@@ -15,11 +13,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgis/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./data:/data
+      - ../Datos\ SQL:/datos_sql
     ports:
       - "55432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -81,8 +80,8 @@ services:
       - ./data:/data
       - ./outputs:/outputs
     ports:
-      - "8000:8000"
-    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+      - "8002:8000"
+    command: [ "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000" ]
     depends_on:
       postgis:
         condition: service_healthy

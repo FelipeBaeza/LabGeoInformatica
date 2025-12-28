@@ -50,19 +50,19 @@ def load_all_data():
     try:
         engine = get_engine()
         buildings = gpd.read_postgis(
-            "SELECT * FROM geoanalisis.area_construcciones", 
+            "SELECT * FROM geoanalisis.isla_de_pascua_buildings", 
             engine, geom_col='geometry'
         )
         boundary = gpd.read_postgis(
-            "SELECT * FROM geoanalisis.limite_administrativa", 
+            "SELECT * FROM geoanalisis.isla_de_pascua_boundary", 
             engine, geom_col='geometry'
         )
         streets = gpd.read_postgis(
-            "SELECT * FROM geoanalisis.linea_calles", 
+            "SELECT * FROM geoanalisis.isla_de_pascua_streets", 
             engine, geom_col='geometry'
         )
         amenities = gpd.read_postgis(
-            "SELECT * FROM geoanalisis.punto_interes", 
+            "SELECT * FROM geoanalisis.isla_de_pascua_amenities", 
             engine, geom_col='geometry'
         )
         return buildings, boundary, streets, amenities
