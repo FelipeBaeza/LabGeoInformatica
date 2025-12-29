@@ -23,7 +23,7 @@ load_dotenv()
 
 # Configuración de página
 st.set_page_config(
-    page_title="Analisis Territorial - Isla de Pascua",
+    page_title="Análisis Territorial - Isla de Pascua",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
@@ -62,7 +62,7 @@ def get_db_engine():
     db_config = {
         'host': os.getenv('POSTGRES_HOST', 'postgis'),
         'port': os.getenv('POSTGRES_PORT', '5432'),
-        'database': os.getenv('POSTGRES_DB', 'geodb'),
+        'database': os.getenv('POSTGRES_DB', 'geodatabase'),
         'user': os.getenv('POSTGRES_USER', 'geouser'),
         'password': os.getenv('POSTGRES_PASSWORD', 'geopass123')
     }
@@ -221,10 +221,17 @@ def create_statistics_charts(gdf, column):
 
 def page_home():
     """Página principal."""
-    st.markdown('<h1 class="main-header">Analisis Territorial - Isla de Pascua</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Análisis Territorial - Isla de Pascua</h1>', unsafe_allow_html=True)
+    
+    # Imagen representativa de Isla de Pascua
+    st.image(
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Moai_Rano_raraku.jpg/640px-Moai_Rano_raraku.jpg",
+        caption="Moai de Isla de Pascua - Patrimonio Cultural de la Humanidad",
+        use_container_width=True
+    )
     
     st.markdown("""
-    ### Sistema de Analisis Geoespacial
+    ### Sistema de Análisis Geoespacial
     
     Esta aplicacion permite:
     - **Visualizar** datos geoespaciales de la comuna
@@ -232,35 +239,7 @@ def page_home():
     - **Explorar** diferentes capas de informacion
     - **Generar** estadisticas y reportes
     
-    ---
     """)
-    
-    # Estado de la conexión
-    col1, col2, col3 = st.columns(3)
-    
-    connected, info = test_connection()
-    
-    with col1:
-        if connected:
-            st.success(f"Conectado a PostGIS v{info}")
-        else:
-            st.error("Sin conexion a PostGIS")
-    
-    with col2:
-        tables = get_available_tables()
-        st.info(f"{len(tables)} capas disponibles")
-    
-    with col3:
-        st.info("Ultima actualizacion: Hoy")
-    
-    # Mostrar tablas disponibles
-    if tables:
-        st.markdown("### Capas de datos disponibles")
-        cols = st.columns(3)
-        for i, table in enumerate(tables):
-            with cols[i % 3]:
-                st.markdown(f"- `{table}`")
-
 
 def page_map_viewer():
     """Página de visualización de mapas."""
@@ -324,15 +303,15 @@ def page_map_viewer():
 
 def page_spatial_analysis():
     """Página de análisis espacial."""
-    st.header("Analisis Espacial")
+    st.header("Análisis Espacial")
     
     tables = get_available_tables()
     
     if not tables:
-        st.warning("No hay datos disponibles para analisis")
+        st.warning("No hay datos disponibles para análisis")
         return
     
-    selected_table = st.selectbox("Seleccionar capa para analisis", tables)
+    selected_table = st.selectbox("Seleccionar capa para análisis", tables)
     
     if selected_table:
         with st.spinner("Cargando datos..."):
@@ -381,41 +360,6 @@ def page_spatial_analysis():
                     st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False})
                 with col2:
                     st.plotly_chart(fig_box, use_container_width=True, config={'displayModeBar': False})
-
-
-def page_about():
-    """Página de información."""
-    st.header("Acerca del Proyecto")
-    
-    st.markdown("""
-    ### Laboratorio de Geoinformatica
-    
-    Este proyecto forma parte del curso de Geoinformatica y tiene como objetivo
-    desarrollar habilidades en:
-    
-    - **Manejo de datos geoespaciales** con Python
-    - **Bases de datos espaciales** con PostGIS
-    - **Analisis espacial** y geoestadistica
-    - **Visualizacion** de datos geograficos
-    - **Desarrollo web** con Streamlit
-    
-    ---
-    
-    ### Tecnologias utilizadas
-    
-    | Tecnologia | Uso |
-    |------------|-----|
-    | Python | Lenguaje principal |
-    | GeoPandas | Manejo de datos espaciales |
-    | PostGIS | Base de datos espacial |
-    | Folium | Mapas interactivos |
-    | Streamlit | Aplicacion web |
-    | Docker | Contenedorizacion |
-    
-    ---
-    
-    **Universidad de Santiago de Chile** | Geoinformatica 2025
-    """)
 
 
 def page_visualizaciones():
@@ -493,14 +437,13 @@ def main():
     """Función principal de la aplicación."""
     
     # Sidebar - Navegación
-    st.sidebar.title("Navegacion")
+    st.sidebar.title("Navegación")
     
     pages = {
         "Inicio": page_home,
         "Visor de Mapas": page_map_viewer,
         "Analisis Espacial": page_spatial_analysis,
-        "Visualizaciones": page_visualizaciones,
-        "Acerca de": page_about
+        "Visualizaciones": page_visualizaciones
     }
     
     selected_page = st.sidebar.radio("Ir a", list(pages.keys()))

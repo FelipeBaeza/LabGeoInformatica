@@ -76,10 +76,10 @@ Este proyecto utiliza \textbf{tecnología de análisis geográfico} para estudia
 En términos simples, creamos un ``mapa inteligente'' que no solo muestra dónde están las cosas, sino que también analiza patrones y puede predecir tendencias.
 
 %==============================================================================
-\section{Los Datos: De Donde Viene la Informacion}
+\section{Los Datos: De Dónde Viene la Información}
 %==============================================================================
 
-Para realizar este análisis, necesitábamos información geográfica detallada sobre la isla. Utilizamos una fuente de datos llamada \textbf{OpenStreetMap} (OSM), que es como un Wikipedia de mapas: personas de todo el mundo contribuyen mapeando calles, edificios y puntos de interés.
+Para realizar este análisis, necesitábamos información geográfica detallada sobre la isla. Utilizamos la fuente de datos llamada \textbf{OpenStreetMap} (OSM) junto con IDE Chile.
 
 \subsection{Qué Datos Obtuvimos}
 
@@ -239,33 +239,13 @@ Creamos una aplicación web que permite explorar todos estos resultados de forma
 La aplicación puede accederse localmente en \texttt{http://localhost:8501} después de ejecutar el sistema con Docker.
 
 %==============================================================================
-\section{Elementos de Excelencia}
-%==============================================================================
-
-Para complementar el análisis básico, implementamos dos elementos avanzados:
-
-\subsection{Visualización 3D}
-
-Creamos un modelo tridimensional donde la altura de las columnas representa la cantidad de edificaciones en cada zona. Esta visualización permite identificar rápidamente las áreas de mayor densidad urbana de una forma intuitiva y visual.
-Las columnas más altas y de colores más cálidos (rojo, naranja) indican zonas con mayor concentración, mientras que las columnas bajas y amarillas representan áreas con pocas construcciones.
-
-\subsection{Análisis de Redes}
-
-Implementamos un análisis avanzado de la red vial utilizando teoría de grafos. Esto nos permite:
-\begin{itemize}
-    \item Calcular la centralidad de cada calle
-    \item Identificar cuellos de botella en la conectividad
-    \item Evaluar la accesibilidad desde cualquier punto de la isla
-\end{itemize}
-
-%==============================================================================
 \section{Conclusiones}
 %==============================================================================
 
-\subsection{Que Aprendimos}
+\subsection{Qué Aprendimos}
 
 \begin{enumerate}
-    \item \textbf{Concentracion extrema}: Isla de Pascua tiene un patrón de desarrollo urbano muy concentrado, con casi toda la actividad en Hanga Roa
+    \item \textbf{Concentración extrema}: Isla de Pascua tiene un patrón de desarrollo urbano muy concentrado, con casi toda la actividad en Hanga Roa
     \item \textbf{Presión localizada}: Los problemas de capacidad de carga afectan principalmente a un sector pequeño de la isla
     \item \textbf{Predictibilidad}: Es posible predecir la densidad edificatoria usando características geográficas simples
     \item \textbf{Vulnerabilidad vial}: La red de calles tiene puntos críticos que podrían afectar la movilidad
@@ -281,29 +261,6 @@ Este proyecto puede ayudar a:
     \item \textbf{Comunidad}: Visualizar cómo está distribuido el desarrollo en su isla
 \end{itemize}
 
-\subsection{Cumplimiento de Requisitos}
-
-El proyecto cumple con todos los componentes requeridos por el laboratorio:
-
-\begin{table}[H]
-\centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Componente} & \textbf{Peso} & \textbf{Estado} \\
-\midrule
-Ambiente Docker/PostGIS & 10\% & Completado \\
-Datos multi-fuente & 20\% & Completado \\
-Análisis Exploratorio (ESDA) & 20\% & Completado \\
-Geoestadística & 15\% & Completado \\
-Machine Learning & 20\% & Completado \\
-Aplicación Web & 15\% & Completado \\
-\midrule
-\textbf{Total} & \textbf{100\%} & \textbf{Completado} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Además, incluimos 2 de los 3 elementos de excelencia requeridos: Visualización 3D y Análisis de Redes.
 
 %==============================================================================
 \section{Referencias}

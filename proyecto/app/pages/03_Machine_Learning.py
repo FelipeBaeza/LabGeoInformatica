@@ -19,9 +19,8 @@ st.set_page_config(page_title="Machine Learning", layout="wide")
 st.title("Machine Learning Espacial")
 
 st.markdown("""
-Este modulo utiliza **inteligencia artificial** para predecir la densidad de edificaciones 
-basandose en caracteristicas geograficas. El modelo aprende de los datos existentes para 
-identificar que factores determinan donde se construye mas en la isla.
+El modelo aprende de los datos existentes para 
+identificar que factores determinan dónde se construye más en la isla.
 """)
 st.markdown("---")
 
@@ -319,11 +318,3 @@ mas intensos son donde el modelo predice mayor densidad de edificaciones. La coi
 con la ubicacion real de Hanga Roa confirma que el modelo ha aprendido correctamente 
 los patrones espaciales de la isla.
 """)
-
-# ============================================================================
-# FOOTER
-# ============================================================================
-
-st.markdown("---")
-st.caption("Machine Learning Espacial - Isla de Pascua | Laboratorio Integrador 2025")
-

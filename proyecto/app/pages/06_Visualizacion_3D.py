@@ -1,6 +1,6 @@
 """
 Modelo 3D de Densidad Urbana - Isla de Pascua
-Visualizacion de patrones de ocupacion territorial
+Visualización de patrones de ocupación territorial
 """
 import streamlit as st
 import pydeck as pdk
@@ -17,9 +17,9 @@ st.title("Modelo 3D de Densidad Urbana")
 
 st.markdown("""
 Este modelo tridimensional representa la **densidad de edificaciones** en Isla de Pascua.
-Cada columna del mapa indica la cantidad de construcciones en esa zona: columnas mas altas 
-significan mayor concentracion de edificios. Esta visualizacion permite identificar rapidamente 
-las areas de mayor desarrollo urbano, lo cual es clave para la planificacion territorial.
+Cada columna del mapa indica la cantidad de construcciones en esa zona: columnas más altas 
+significan mayor concentración de edificios. Esta visualización permite identificar rápidamente 
+las áreas de mayor desarrollo urbano, lo cual es clave para la planificación territorial.
 """)
 st.markdown("---")
 
@@ -109,7 +109,7 @@ points_data = pd.DataFrame({
 points_data = points_data.dropna()
 
 if len(points_data) == 0:
-    st.error("No hay datos validos para visualizar.")
+    st.error("No hay datos válidos para visualizar.")
     st.stop()
 
 # Calcular centro del mapa
@@ -178,28 +178,25 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Total edificios", len(points_data))
 with col2:
-    st.metric("Area promedio", f"{points_data['area'].mean():.0f} m2")
+    st.metric("Área promedio", f"{points_data['area'].mean():.0f} m2")
 with col3:
-    st.metric("Area total", f"{points_data['area'].sum()/10000:.1f} ha")
+    st.metric("Área total", f"{points_data['area'].sum()/10000:.1f} ha")
 
 # ============================================================================
 # INTERPRETACION
 # ============================================================================
 
 st.markdown("---")
-st.subheader("Interpretacion")
+st.subheader("Interpretación")
 
 st.markdown("""
 **Lectura del modelo:**
-- Las columnas mas altas (rojo) indican zonas con mayor concentracion de edificios
-- Las columnas bajas (amarillo) representan areas con menos construcciones
+- Las columnas más altas (rojo) indican zonas con mayor concentracián de edificios
+- Las columnas bajas (amarillo) representan áreas con menos construcciones
 - La ausencia de columnas indica zonas sin edificaciones
 
 **Patrones observados:**
-- La mayor densidad se concentra en **Hanga Roa**, el unico centro urbano de la isla
+- La mayor densidad se concentra en **Hanga Roa**, el único centro urbano de la isla
 - Las zonas perifericas muestran una densidad constructiva mucho menor
-- Este patron refleja la concentracion historica de la poblacion en un solo asentamiento
+- Este patrón refleja la concentración historica de la población en un solo asentamiento
 """)
-
-st.markdown("---")
-st.caption("Modelo 3D de Densidad - Isla de Pascua | Laboratorio Integrador 2025")

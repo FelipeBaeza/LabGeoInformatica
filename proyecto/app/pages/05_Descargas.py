@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 
 st.set_page_config(page_title="Descargas", layout="wide")
 
-st.title("📥 Centro de Descargas")
+st.title("Centro de Descargas")
 st.markdown("""
 Descargue los datos, mapas y resultados del análisis territorial de Isla de Pascua.
 """)
@@ -43,7 +43,7 @@ st.header("1. Datos Espaciales")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📍 Datos desde PostGIS")
+    st.subheader("Datos desde PostGIS")
     
     try:
         engine = get_engine()
@@ -78,7 +78,7 @@ with col1:
                     if format_option == "GeoJSON":
                         geojson_str = gdf.to_json()
                         st.download_button(
-                            label=f"⬇️ Descargar {selected_table}.geojson",
+                            label=f"Descargar {selected_table}.geojson",
                             data=geojson_str,
                             file_name=f"{selected_table}.geojson",
                             mime="application/json"
@@ -90,13 +90,13 @@ with col1:
                         df['centroid_y'] = gdf.geometry.centroid.y
                         csv_str = df.to_csv(index=False)
                         st.download_button(
-                            label=f"⬇️ Descargar {selected_table}.csv",
+                            label=f"Descargar {selected_table}.csv",
                             data=csv_str,
                             file_name=f"{selected_table}.csv",
                             mime="text/csv"
                         )
                     
-                    st.success(f"✓ {len(gdf)} registros listos para descarga")
+                    st.success(f"{len(gdf)} registros listos para descarga")
         else:
             st.warning("No hay tablas disponibles en PostGIS")
             
@@ -105,7 +105,7 @@ with col1:
         st.info("Asegúrese de que el contenedor postgis esté corriendo")
 
 with col2:
-    st.subheader("📁 Datos Locales")
+    st.subheader("Datos Locales")
     
     data_path = Path("/data/raw/isla_de_pascua")
     if not data_path.exists():
@@ -126,7 +126,7 @@ with col2:
                 content = f.read()
             
             st.download_button(
-                label=f"⬇️ Descargar {selected_file}",
+                label=f"Descargar {selected_file}",
                 data=content,
                 file_name=selected_file,
                 mime="application/json"
@@ -134,7 +134,7 @@ with col2:
             
             # Mostrar info del archivo
             gdf = gpd.read_file(filepath)
-            st.caption(f"📊 {len(gdf)} registros | {filepath.stat().st_size/1024:.1f} KB")
+            st.caption(f"{len(gdf)} registros | {filepath.stat().st_size/1024:.1f} KB")
         else:
             st.warning("No hay archivos GeoJSON en data/raw")
     else:
@@ -169,7 +169,7 @@ if outputs_path.exists():
                     img_bytes = f.read()
                 
                 st.download_button(
-                    label=f"⬇️ {img_file.name}",
+                    label=f"{img_file.name}",
                     data=img_bytes,
                     file_name=img_file.name,
                     mime="image/png",
@@ -191,7 +191,7 @@ st.header("3. Reportes y Estadísticas")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Estadísticas Generales")
+    st.subheader("Estadísticas Generales")
     
     if st.button("Generar Reporte de Estadísticas"):
         try:
@@ -226,7 +226,7 @@ with col1:
             # Descargar
             csv_stats = df_stats.to_csv(index=False)
             st.download_button(
-                label="⬇️ Descargar estadisticas.csv",
+                label="Descargar estadisticas.csv",
                 data=csv_stats,
                 file_name="estadisticas_isla_pascua.csv",
                 mime="text/csv"
@@ -236,7 +236,7 @@ with col1:
             st.error(f"Error generando reporte: {e}")
 
 with col2:
-    st.subheader("📄 Archivos Adicionales")
+    st.subheader("Archivos Adicionales")
     
     # Buscar CSVs y otros archivos
     csv_files = list(outputs_path.glob("*.csv")) if outputs_path.exists() else []
@@ -250,7 +250,7 @@ with col2:
                 content = file.read()
             
             st.download_button(
-                label=f"⬇️ {f.name}",
+                label=f"{f.name}",
                 data=content,
                 file_name=f.name,
                 mime="text/csv" if f.suffix == ".csv" else "application/json",
@@ -300,11 +300,3 @@ prediction = response.json()
 
 **Documentación interactiva:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 """)
-
-
-# =============================================================================
-# FOOTER
-# =============================================================================
-
-st.markdown("---")
-st.caption("Centro de Descargas - Sistema de Análisis Territorial | Laboratorio Integrador 2025")

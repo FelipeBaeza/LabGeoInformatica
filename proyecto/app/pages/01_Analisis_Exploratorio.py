@@ -1,6 +1,6 @@
 """
-Pagina de Analisis Exploratorio de Datos Espaciales (ESDA)
-Muestra estadisticas, mapas y patrones de distribucion
+Pagina de Análisis Exploratorio de Datos Espaciales (ESDA)
+Muestra estadísticas, mapas y patrones de distribución
 """
 import streamlit as st
 import geopandas as gpd
@@ -12,14 +12,14 @@ from streamlit_folium import st_folium
 import os
 from sqlalchemy import create_engine
 
-st.set_page_config(page_title="Analisis Exploratorio", layout="wide")
+st.set_page_config(page_title="Análisis Exploratorio", layout="wide")
 
-st.title("Analisis Exploratorio de Datos Espaciales")
+st.title("Análisis Exploratorio de Datos Espaciales")
 
 st.markdown("""
-Este modulo permite explorar los datos geograficos de Isla de Pascua. El analisis exploratorio 
-es el primer paso en cualquier estudio territorial, ya que nos permite entender como estan 
-distribuidos los elementos en el espacio antes de aplicar tecnicas mas avanzadas.
+Este módulo permite explorar los datos geográficos de Isla de Pascua. El análisis exploratorio 
+es el primer paso en cualquier estudio territorial, ya que nos permite entender como están 
+distribuidos los elementos en el espacio antes de aplicar técnicas más avanzadas.
 """)
 st.markdown("---")
 
@@ -79,11 +79,11 @@ if not data or 'buildings' not in data:
 # SECCION 1: ESTADISTICAS DESCRIPTIVAS
 # ============================================================================
 
-st.header("1. Estadisticas Descriptivas")
+st.header("1. Estadísticas Descriptivas")
 
 st.markdown("""
-Las estadisticas descriptivas nos dan una vision general de la cantidad y caracteristicas 
-de los elementos geograficos. Esto nos permite dimensionar el alcance del estudio.
+Las estadísticas descriptivas nos dan una visión general de la cantidad y características 
+de los elementos geográficos. Esto nos permite dimensionar el alcance del estudio.
 """)
 
 col1, col2, col3, col4 = st.columns(4)
@@ -91,7 +91,7 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Edificaciones", len(data.get('buildings', [])))
 with col2:
-    st.metric("Puntos de Interes", len(data.get('amenities', [])))
+    st.metric("Puntos de Interés", len(data.get('amenities', [])))
 with col3:
     st.metric("Segmentos Viales", len(data.get('streets', [])))
 with col4:
@@ -102,20 +102,20 @@ with col4:
         st.metric("Area Construida", f"{area_total:.1f} ha")
 
 st.markdown("""
-**Interpretacion:** Isla de Pascua tiene una cantidad relativamente pequena de edificaciones 
-concentradas principalmente en Hanga Roa. Los puntos de interes incluyen restaurantes, 
-hoteles y servicios turisticos que atienden a los visitantes de la isla.
+**Interpretación:** Isla de Pascua tiene una cantidad relativamente pequeña de edificaciones 
+concentradas principalmente en Hanga Roa. Los puntos de interés incluyen restaurantes, 
+hoteles y servicios turísticos que atienden a los visitantes de la isla.
 """)
 
 # ============================================================================
 # SECCION 2: MAPA INTERACTIVO
 # ============================================================================
 
-st.header("2. Mapa de Distribucion Espacial")
+st.header("2. Mapa de Distribución Espacial")
 
 st.markdown("""
-Este mapa interactivo muestra la ubicacion de todas las edificaciones y puntos de interes.
-Permite identificar visualmente donde se concentran los elementos y detectar patrones espaciales.
+Este mapa interactivo muestra la ubicación de todas las edificaciones y puntos de interés.
+Permite identificar visualmente dónde se concentran los elementos y detectar patrones espaciales.
 """)
 
 # Calcular centro
@@ -157,21 +157,21 @@ if 'amenities' in data:
 st_folium(m, width=900, height=500)
 
 st.markdown("""
-**Interpretacion:** El mapa revela que las edificaciones (naranja) se concentran casi 
+**Interpretación:** El mapa revela que las edificaciones (naranja) se concentran casi 
 exclusivamente en el sector oeste de la isla, correspondiente al pueblo de Hanga Roa. 
-Los puntos de interes (azul) siguen el mismo patron, lo que indica que los servicios 
-turisticos estan ubicados cerca de la zona habitada.
+Los puntos de interés (azul) siguen el mismo patrón, lo que indica que los servicios 
+turísticos están ubicados cerca de la zona habitada.
 """)
 
 # ============================================================================
 # SECCION 3: HISTOGRAMA DE AREAS
 # ============================================================================
 
-st.header("3. Distribucion de Tamanos de Edificaciones")
+st.header("3. Distribución de Tamanos de Edificaciones")
 
 st.markdown("""
-Este grafico muestra como se distribuyen las edificaciones segun su tamano (area en metros cuadrados).
-Nos permite entender si predominan construcciones pequenas o grandes.
+Este gráfico muestra cómo se distribuyen las edificaciones según su tamaño (área en metros cuadrados).
+Nos permite entender si predominan construcciones pequeñas o grandes.
 """)
 
 if 'buildings' in data:
@@ -185,9 +185,9 @@ if 'buildings' in data:
     areas = areas[(areas > 10) & (areas < 2000)]
     
     ax.hist(areas, bins=50, color='#FF6B35', edgecolor='white', alpha=0.8)
-    ax.set_xlabel('Area (m2)')
+    ax.set_xlabel('Área (m2)')
     ax.set_ylabel('Cantidad de edificaciones')
-    ax.set_title('Distribucion de areas de edificaciones')
+    ax.set_title('Distribución de áreas de edificaciones')
     ax.axvline(areas.median(), color='red', linestyle='--', label=f'Mediana: {areas.median():.0f} m2')
     ax.legend()
     
@@ -196,21 +196,14 @@ if 'buildings' in data:
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Area minima", f"{areas.min():.0f} m2")
+        st.metric("Área minima", f"{areas.min():.0f} m2")
     with col2:
-        st.metric("Area mediana", f"{areas.median():.0f} m2")
+        st.metric("Área mediana", f"{areas.median():.0f} m2")
     with col3:
-        st.metric("Area maxima", f"{areas.max():.0f} m2")
+        st.metric("Área maxima", f"{areas.max():.0f} m2")
 
 st.markdown("""
-**Interpretacion:** La mayoria de las edificaciones son de tamano pequeno a mediano, 
-tipicas de viviendas familiares. La distribucion sesgada hacia la izquierda indica 
-que las construcciones grandes (hoteles, edificios publicos) son escasas.
+**Interpretación:** La mayoria de las edificaciones son de tamaño pequeño a mediano, 
+típicas de viviendas familiares. La distribución sesgada hacia la izquierda indica 
+que las construcciones grandes (hoteles, edificios públicos) son escasas.
 """)
-
-# ============================================================================
-# FOOTER
-# ============================================================================
-
-st.markdown("---")
-st.caption("Analisis Exploratorio - Isla de Pascua | Laboratorio Integrador 2025")

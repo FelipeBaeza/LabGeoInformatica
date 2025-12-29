@@ -17,13 +17,13 @@ sys.path.append(str(__file__).replace('/app/pages/07_Geoestadistica.py', '/scrip
 
 # Configuracion
 st.set_page_config(page_title="Geoestadistica", layout="wide")
-st.title("Analisis Geoestadistico")
+st.title("Análisis Geoestadístico")
 
 st.markdown("""
-La **geoestadistica** estudia como varian los fenomenos en el espacio. En este modulo analizamos 
-la densidad de edificaciones usando **semivariogramas** (graficos que muestran como cambia la 
-similitud entre zonas a diferentes distancias) y **Kriging** (un metodo de interpolacion que 
-estima valores en lugares donde no tenemos datos directos). Estas tecnicas son fundamentales 
+La **geoestadistica** estudia como varian los fenomenos en el espacio. En este módulo analizamos 
+la densidad de edificaciones usando **semivariogramas** (gráficos que muestran como cambia la 
+similitud entre zonas a diferentes distancias) y **Kriging** (un método de interpolación que 
+estima valores en lugares donde no tenemos datos directos). Estas técnicas son fundamentales 
 para entender patrones espaciales y hacer predicciones.
 """)
 st.markdown("---")
@@ -494,7 +494,7 @@ try:
         cada punto se predice usando los demás puntos como referencia.
         """)
         
-        if st.button("Ejecutar Validacion (Leave-One-Out)", type="primary"):
+        if st.button("Ejecutar Validación (Leave-One-Out)", type="primary"):
             with st.spinner("Ejecutando validación cruzada..."):
                 n = len(values)
                 
@@ -587,7 +587,3 @@ except Exception as e:
     st.error(f"Error: {e}")
     import traceback
     st.code(traceback.format_exc())
-
-# Footer
-st.markdown("---")
-st.caption("Análisis Geoestadístico - Isla de Pascua | Laboratorio Integrador 2025")

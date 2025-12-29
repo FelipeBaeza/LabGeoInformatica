@@ -19,9 +19,9 @@ st.set_page_config(page_title="Hot Spots", layout="wide")
 st.title("Analisis de Hot Spots")
 
 st.markdown("""
-Este modulo identifica **zonas calientes (hot spots)** donde la concentracion de edificaciones 
-es significativamente mayor que el promedio de la isla. Utilizamos tecnicas estadisticas para 
-determinar si las agrupaciones observadas representan un patron real o son aleatorias.
+Este módulo identifica **zonas calientes (hot spots)** donde la concentración de edificaciones 
+es significativamente mayor que el promedio de la isla. Utilizamos técnicas estadísticas para 
+determinar si las agrupaciones observadas representan un patrón real o son aleatorias.
 """)
 st.markdown("---")
 
@@ -293,10 +293,3 @@ Esta concentracion extrema tiene implicancias para la planificacion territorial:
 2. El crecimiento futuro debera considerar la capacidad de carga del sector urbano
 3. La mayoria de la isla permanece protegida de la expansion urbana
 """)
-
-# ============================================================================
-# FOOTER
-# ============================================================================
-
-st.markdown("---")
-st.caption("Analisis Hot Spots - Isla de Pascua | Laboratorio Integrador 2025")
