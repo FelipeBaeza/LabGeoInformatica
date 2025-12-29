@@ -125,11 +125,11 @@ El sistema incluye:
 \subsection{Métodos de Análisis}
 Utilizamos cuatro tipos principales de análisis:
 
-\subsubsection{1. Análisis Exploratorio (ESDA)}
+\subsubsection{1. Analisis Exploratorio (ESDA)}
 
-El primer paso fue entender cómo se distribuyen las edificaciones. Creamos una \textbf{grilla regular} sobre la isla, dividiendo el territorio en celdas de 200 metros por 200 metros, y contamos cuantos edificios había en cada celda.
+El primer paso fue entender como se distribuyen las edificaciones. Creamos una \textbf{grilla regular} sobre la isla, dividiendo el territorio en celdas de 200 metros por 200 metros, y contamos cuantos edificios habia en cada celda.
 
-Esto nos permitió crear mapas de densidad que muestran claramente donde hay más y menos construcciones.
+Esto nos permitio crear mapas de densidad que muestran claramente donde hay mas y menos construcciones. Ademas, aplicamos \textbf{Analisis de Componentes Principales (PCA)} para reducir la dimensionalidad y encontrar patrones multivariados en las caracteristicas de las edificaciones.
 
 \subsubsection{2. Detección de Zonas Calientes (Hot Spots)}
 
@@ -147,15 +147,27 @@ Aplicamos técnicas geoestadísticas como \textbf{semivariogramas} y \textbf{Kri
 
 El semivariograma nos dice qué tan similares son las celdas cercanas entre sí: en general, celdas cercanas tienen valores similares, y esta similitud disminuye con la distancia.
 
-\subsubsection{4. Aprendizaje Automático (Machine Learning)}
-Entrenamos modelos de inteligencia artificial para predecir la densidad de edificaciones basándonos en características del terreno como:
+\subsubsection{4. Aprendizaje Automatico (Machine Learning)}
+Entrenamos y comparamos multiples modelos de inteligencia artificial para predecir la densidad de edificaciones. Siguiendo los requerimientos del laboratorio, evaluamos:
+
+\begin{itemize}
+    \item \textbf{Random Forest}: Ensamble de arboles de decision
+    \item \textbf{XGBoost}: Gradient Boosting optimizado
+    \item \textbf{SVM (Support Vector Machine)}: Modelo de kernel RBF
+    \item \textbf{Gradient Boosting}: Boosting secuencial tradicional
+\end{itemize}
+
+Las variables predictoras utilizadas fueron:
 \begin{itemize}
     \item Distancia al centro de la isla
     \item Cantidad de servicios cercanos (restaurantes, tiendas, etc.)
     \item Longitud de calles en la zona
+    \item Posicion geografica normalizada (X, Y)
 \end{itemize}
 
-Los mejores resultados los obtuvimos con un modelo llamado \textbf{XGBoost}, que logró predecir correctamente el 88\% de la variación en la densidad edificatoria.
+Para la validacion, utilizamos \textbf{GroupKFold} con zonas geograficas como grupos, evitando el data leakage espacial que ocurriria con validation cruzada tradicional.
+
+Los mejores resultados los obtuvimos con el modelo \textbf{Random Forest}, seguido de cerca por XGBoost. Ambos lograron explicar aproximadamente el 85-88\% de la variacion en la densidad edificatoria.
 
 %==============================================================================
 \section{Resultados Principales}

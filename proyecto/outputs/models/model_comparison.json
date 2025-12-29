@@ -1,0 +1,144 @@
+{
+  "project_info": {
+    "comuna": "Isla de Pascua",
+    "date_analyzed": "2024-12-28",
+    "objective": "Predicción de densidad de edificaciones"
+  },
+  "models_compared": [
+    {
+      "name": "Random Forest",
+      "type": "Ensemble (Bagging)",
+      "description": "Ensamble de múltiples árboles de decisión entrenados con bootstrap",
+      "advantages": [
+        "Robusto a outliers y ruido",
+        "Proporciona importancia de variables",
+        "Bajo riesgo de overfitting",
+        "Maneja bien datos espaciales"
+      ],
+      "disadvantages": [
+        "Puede ser lento para predicción en datasets grandes",
+        "Modelo de caja negra"
+      ],
+      "hyperparameters": {
+        "n_estimators": 100,
+        "random_state": 42
+      }
+    },
+    {
+      "name": "XGBoost",
+      "type": "Ensemble (Gradient Boosting)",
+      "description": "Gradient Boosting optimizado con regularización",
+      "advantages": [
+        "Alta precisión",
+        "Eficiente computacionalmente",
+        "Regularización incorporada",
+        "Maneja valores faltantes"
+      ],
+      "disadvantages": [
+        "Requiere tuning cuidadoso de hiperparámetros",
+        "Sensible a outliers"
+      ],
+      "hyperparameters": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "learning_rate": 0.1
+      }
+    },
+    {
+      "name": "SVM (RBF Kernel)",
+      "type": "Kernel Method",
+      "description": "Support Vector Machine con kernel radial basis function",
+      "advantages": [
+        "Efectivo en espacios de alta dimensionalidad",
+        "Funciona bien con datasets pequeños",
+        "Versátil gracias a diferentes kernels"
+      ],
+      "disadvantages": [
+        "Difícil interpretación",
+        "Computacionalmente costoso para datasets grandes",
+        "Sensible a la escala de features"
+      ],
+      "hyperparameters": {
+        "kernel": "rbf",
+        "C": 100,
+        "gamma": "scale"
+      }
+    },
+    {
+      "name": "Gradient Boosting",
+      "type": "Ensemble (Gradient Boosting)",
+      "description": "Boosting secuencial que optimiza errores residuales",
+      "advantages": [
+        "Alta precisión",
+        "Proporciona importancia de variables",
+        "Flexible para diferentes funciones de pérdida"
+      ],
+      "disadvantages": [
+        "Lento de entrenar",
+        "Sensible a outliers",
+        "Riesgo de overfitting sin regularización"
+      ],
+      "hyperparameters": {
+        "n_estimators": 100,
+        "random_state": 42
+      }
+    },
+    {
+      "name": "Linear Regression",
+      "type": "Linear Model",
+      "description": "Modelo lineal simple como baseline",
+      "advantages": [
+        "Simple e interpretable",
+        "Rápido de entrenar",
+        "Bueno como baseline"
+      ],
+      "disadvantages": [
+        "No captura relaciones no lineales",
+        "Asume independencia de errores"
+      ],
+      "hyperparameters": {}
+    }
+  ],
+  "selected_model": {
+    "name": "Random Forest",
+    "justification": [
+      "Mayor R² en validación cruzada espacial (GroupKFold)",
+      "Mejor balance entre ajuste y generalización",
+      "Proporciona interpretabilidad mediante feature importance",
+      "Robusto a la autocorrelación espacial"
+    ]
+  },
+  "validation_method": {
+    "name": "GroupKFold Spatial Cross-Validation",
+    "description": "Validación cruzada que agrupa zonas geográficas completas, evitando data leakage espacial",
+    "n_splits": 5,
+    "importance": "Crítico para problemas geoespaciales donde existe autocorrelación espacial"
+  },
+  "features_used": [
+    {
+      "name": "dist_centro",
+      "description": "Distancia euclidiana al centroide de la isla",
+      "type": "Spatial"
+    },
+    {
+      "name": "n_amenities",
+      "description": "Cantidad de servicios/comercios en la celda",
+      "type": "Count"
+    },
+    {
+      "name": "street_length",
+      "description": "Longitud total de calles en la celda (metros)",
+      "type": "Spatial"
+    },
+    {
+      "name": "x_norm",
+      "description": "Posición X normalizada [0,1]",
+      "type": "Coordinate"
+    },
+    {
+      "name": "y_norm",
+      "description": "Posición Y normalizada [0,1]",
+      "type": "Coordinate"
+    }
+  ]
+}

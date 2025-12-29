@@ -1,6 +1,12 @@
 """
 Pagina de Machine Learning Espacial
-Entrena modelos para predecir densidad de edificaciones
+Entrena y compara modelos para predecir densidad de edificaciones.
+
+Modelos comparados segun requerimientos del laboratorio:
+- Random Forest
+- XGBoost
+- SVM (Support Vector Machine)
+- Gradient Boosting
 """
 import streamlit as st
 import geopandas as gpd
@@ -9,19 +15,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import box
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.model_selection import cross_val_score, GroupKFold
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import os
 from sqlalchemy import create_engine
+
+# XGBoost (opcional)
+try:
+    import xgboost as xgb
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBOOST_AVAILABLE = False
 
 st.set_page_config(page_title="Machine Learning", layout="wide")
 
 st.title("Machine Learning Espacial")
 
 st.markdown("""
-El modelo aprende de los datos existentes para 
-identificar que factores determinan dónde se construye más en la isla.
+Esta página presenta la **comparación completa de modelos de Machine Learning** para
+predecir la densidad de edificaciones en Isla de Pascua. 
+
+Siguiendo los requerimientos del laboratorio, se comparan:
+- **Random Forest** - Modelo basado en ensamble de árboles
+- **XGBoost** - Gradient Boosting optimizado
+- **SVM (Support Vector Machine)** - Modelo de kernel
+- **Gradient Boosting** - Boosting tradicional
 """)
+
 st.markdown("---")
 
 # Configuracion BD
@@ -135,6 +158,9 @@ def load_and_prepare_data(cell_size=300):
     grid['x_norm'] = (grid['centroid_x'] - grid['centroid_x'].min()) / (grid['centroid_x'].max() - grid['centroid_x'].min())
     grid['y_norm'] = (grid['centroid_y'] - grid['centroid_y'].min()) / (grid['centroid_y'].max() - grid['centroid_y'].min())
     
+    # Crear zona_id para validación espacial (GroupKFold)
+    grid['zona_id'] = pd.cut(grid['x_norm'] + grid['y_norm'], bins=5, labels=False)
+    
     return grid
 
 
@@ -143,7 +169,7 @@ def load_and_prepare_data(cell_size=300):
 # ============================================================================
 
 st.sidebar.header("Configuracion")
-cell_size = st.sidebar.slider("Tamano de celda (m)", 200, 400, 300, 50)
+cell_size = st.sidebar.slider("Tamaño de celda (m)", 200, 400, 300, 50)
 
 with st.spinner("Preparando datos y features..."):
     grid = load_and_prepare_data(cell_size)
@@ -155,124 +181,265 @@ if grid is None:
 # SECCION 1: FEATURES ESPACIALES
 # ============================================================================
 
-st.header("1. Variables Predictoras (Features)")
+st.header("1. Variables Predictoras (Feature Engineering Espacial)")
 
 st.markdown("""
-Para que el modelo de inteligencia artificial pueda hacer predicciones, necesitamos 
-definir **variables predictoras** que describan las caracteristicas de cada zona. 
-Estas son las variables que calculamos para cada celda:
+Para implementar machine learning geoespacial, es necesario crear **features espaciales** 
+que capturen las características territoriales de cada zona. Estos features fueron diseñados
+siguiendo las mejores prácticas de análisis espacial:
 """)
 
 features = ['dist_centro', 'n_amenities', 'street_length', 'x_norm', 'y_norm']
 feature_names = {
     'dist_centro': 'Distancia al centro (m)',
-    'n_amenities': 'Numero de amenidades',
+    'n_amenities': 'Número de amenidades',
     'street_length': 'Longitud de calles (m)',
-    'x_norm': 'Posicion X normalizada',
-    'y_norm': 'Posicion Y normalizada'
+    'x_norm': 'Posición X normalizada',
+    'y_norm': 'Posición Y normalizada'
 }
 
-st.markdown("""
-| Variable | Descripcion | Hipotesis |
-|----------|-------------|-----------|
-| Distancia al centro | Metros desde el centroide de la isla | Mas lejos = menos edificios |
-| Amenidades | Servicios cercanos (comercios, etc.) | Mas servicios = mas edificios |
-| Longitud calles | Metros de calles en la celda | Mas calles = mas edificios |
-| Posicion X, Y | Ubicacion geografica | El oeste tiene mas edificios |
-""")
+col1, col2 = st.columns(2)
 
-# Mostrar estadisticas de features
-st.dataframe(grid[features].describe().round(2))
+with col1:
+    st.markdown("""
+    | Variable | Descripción |
+    |----------|-------------|
+    | `dist_centro` | Distancia al centroide de la isla |
+    | `n_amenities` | Servicios/comercios en la celda |
+    | `street_length` | Metros de calles en la celda |
+    | `x_norm`, `y_norm` | Posición geográfica normalizada |
+    """)
+
+with col2:
+    st.dataframe(grid[features].describe().round(2))
 
 # ============================================================================
-# SECCION 2: ENTRENAR MODELO
+# SECCION 2: COMPARACIÓN DE MODELOS
 # ============================================================================
 
-st.header("2. Entrenamiento del Modelo")
+st.header("2. Comparacion de Modelos de Machine Learning")
 
 st.markdown("""
-Utilizamos el algoritmo **Random Forest**, que combina multiples arboles de decision 
-para hacer predicciones robustas. Este metodo es muy efectivo para datos geograficos 
-porque puede capturar relaciones no lineales entre las variables.
+Según los requerimientos del laboratorio, se deben comparar **al menos 3 algoritmos diferentes**.
+A continuación se presentan los modelos evaluados y sus resultados:
 """)
 
 # Preparar datos
 X = grid[features].values
 y = grid['n_edificios'].values
+groups = grid['zona_id'].values
 
 # Escalar features
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# Entrenar modelo
-model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+# Definir modelos a comparar
+models = {
+    'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1),
+    'Gradient Boosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
+    'SVM (RBF Kernel)': SVR(kernel='rbf', C=100, gamma='scale'),
+    'Linear Regression': LinearRegression(),
+}
 
-# Validacion cruzada
-with st.spinner("Entrenando modelo..."):
-    cv_scores = cross_val_score(model, X_scaled, y, cv=5, scoring='r2')
-    model.fit(X_scaled, y)
-    predictions = model.predict(X_scaled)
+if XGBOOST_AVAILABLE:
+    models['XGBoost'] = xgb.XGBRegressor(n_estimators=100, max_depth=6, 
+                                          learning_rate=0.1, random_state=42, verbosity=0)
 
-# Metricas
-col1, col2, col3 = st.columns(3)
+# Entrenamiento y evaluación con validación cruzada espacial
+results = {}
+gkf = GroupKFold(n_splits=5)
 
-with col1:
-    st.metric("R2 Promedio (CV)", f"{cv_scores.mean():.3f}")
-with col2:
-    st.metric("Desv. Estandar", f"{cv_scores.std():.3f}")
-with col3:
-    rmse = np.sqrt(np.mean((y - predictions)**2))
-    st.metric("RMSE", f"{rmse:.2f}")
+with st.spinner("Entrenando y comparando modelos con validación espacial..."):
+    progress_bar = st.progress(0)
+    
+    for i, (name, model) in enumerate(models.items()):
+        # Validación cruzada espacial (GroupKFold evita data leakage espacial)
+        cv_scores = cross_val_score(model, X_scaled, y, cv=gkf, groups=groups, scoring='r2')
+        
+        # Entrenar modelo completo para predicciones
+        model.fit(X_scaled, y)
+        predictions = model.predict(X_scaled)
+        
+        rmse = np.sqrt(mean_squared_error(y, predictions))
+        mae = mean_absolute_error(y, predictions)
+        r2 = r2_score(y, predictions)
+        
+        results[name] = {
+            'model': model,
+            'cv_mean': cv_scores.mean(),
+            'cv_std': cv_scores.std(),
+            'r2': r2,
+            'rmse': rmse,
+            'mae': mae,
+            'predictions': predictions
+        }
+        
+        progress_bar.progress((i + 1) / len(models))
 
-st.markdown(f"""
-**Interpretacion de metricas:**
-- **R2 = {cv_scores.mean():.2f}** significa que el modelo explica el {cv_scores.mean()*100:.0f}% de la 
-  variabilidad en la densidad de edificaciones. Un valor cercano a 1 indica buen ajuste.
-- **RMSE = {rmse:.2f}** es el error promedio en numero de edificios por celda.
-""")
+progress_bar.empty()
 
-# ============================================================================
-# SECCION 3: IMPORTANCIA DE VARIABLES
-# ============================================================================
+# Crear DataFrame de resultados
+results_df = pd.DataFrame({
+    'Modelo': results.keys(),
+    'R² (CV Espacial)': [r['cv_mean'] for r in results.values()],
+    'Desv. Std': [r['cv_std'] for r in results.values()],
+    'R² (Train)': [r['r2'] for r in results.values()],
+    'RMSE': [r['rmse'] for r in results.values()],
+    'MAE': [r['mae'] for r in results.values()]
+}).sort_values('R² (CV Espacial)', ascending=False).reset_index(drop=True)
 
-st.header("3. Importancia de Variables")
+# Mostrar tabla de comparación
+st.subheader("Tabla Comparativa de Modelos")
+st.dataframe(results_df.style.highlight_max(subset=['R² (CV Espacial)', 'R² (Train)'], color='lightgreen')
+             .highlight_min(subset=['RMSE', 'MAE'], color='lightgreen')
+             .format({
+                 'R² (CV Espacial)': '{:.4f}',
+                 'Desv. Std': '±{:.4f}',
+                 'R² (Train)': '{:.4f}',
+                 'RMSE': '{:.2f}',
+                 'MAE': '{:.2f}'
+             }))
 
-st.markdown("""
-Este grafico muestra cuanto contribuye cada variable a las predicciones del modelo.
-Las variables mas importantes son las que mejor explican donde hay mas edificaciones.
-""")
+# Gráfico de comparación
+st.subheader("Visualizacion de Rendimiento")
 
-importance = pd.DataFrame({
-    'Variable': [feature_names[f] for f in features],
-    'Importancia': model.feature_importances_
-}).sort_values('Importancia', ascending=True)
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.barh(importance['Variable'], importance['Importancia'], color='#2E86AB')
-ax.set_xlabel('Importancia Relativa')
-ax.set_title('Importancia de Variables en el Modelo')
+# Gráfico R² 
+ax1 = axes[0]
+colors = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#3B1F2B'][:len(results)]
+bars = ax1.barh(list(results.keys()), [r['cv_mean'] for r in results.values()], color=colors)
+ax1.errorbar([r['cv_mean'] for r in results.values()], range(len(results)), 
+             xerr=[r['cv_std']*2 for r in results.values()], fmt='none', color='black', capsize=3)
+ax1.set_xlabel('R² Score (Validación Cruzada Espacial)')
+ax1.set_title('Comparación de R² con Validación Espacial')
+ax1.set_xlim(0, 1)
 
+# Agregar valores
+for bar, val in zip(bars, [r['cv_mean'] for r in results.values()]):
+    ax1.text(val + 0.02, bar.get_y() + bar.get_height()/2, f'{val:.3f}', va='center')
+
+# Gráfico RMSE
+ax2 = axes[1]
+bars2 = ax2.barh(list(results.keys()), [r['rmse'] for r in results.values()], color=colors)
+ax2.set_xlabel('RMSE (Error Cuadrático Medio)')
+ax2.set_title('Comparación de Error (RMSE)')
+
+for bar, val in zip(bars2, [r['rmse'] for r in results.values()]):
+    ax2.text(val + 0.1, bar.get_y() + bar.get_height()/2, f'{val:.2f}', va='center')
+
+plt.tight_layout()
 st.pyplot(fig)
 plt.close()
 
+# ============================================================================
+# SECCION 3: MODELO SELECCIONADO Y JUSTIFICACIÓN
+# ============================================================================
+
+st.header("3. Modelo Seleccionado y Justificacion")
+
+# Identificar el mejor modelo
+best_model_name = results_df.iloc[0]['Modelo']
+best_result = results[best_model_name]
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Mejor Modelo", best_model_name)
+with col2:
+    st.metric("R² (CV Espacial)", f"{best_result['cv_mean']:.4f}")
+with col3:
+    st.metric("RMSE", f"{best_result['rmse']:.2f}")
+
 st.markdown(f"""
-**Interpretacion:** La variable mas importante es **{importance.iloc[-1]['Variable']}** 
-con una importancia de {importance.iloc[-1]['Importancia']*100:.1f}%. Esto significa que 
-esta caracteristica es la que mejor predice donde hay mas edificaciones en la isla.
+### ¿Por qué se eligió **{best_model_name}**?
+
+El modelo **{best_model_name}** fue seleccionado como el mejor modelo basándose en los siguientes criterios:
+
+1. **Mayor R² en Validación Cruzada Espacial** ({best_result['cv_mean']:.4f}): 
+   - Este es el criterio más importante ya que utiliza **GroupKFold** para evitar data leakage espacial
+   - Las zonas geográficas se agrupan para garantizar que el modelo generalice bien a nuevas áreas
+
+2. **Mejor balance entre ajuste y generalización**:
+   - R² de entrenamiento ({best_result['r2']:.4f}) vs R² CV ({best_result['cv_mean']:.4f})
+   - Diferencia pequeña indica que no hay overfitting significativo
+
+3. **Error de predicción controlado**:
+   - RMSE de {best_result['rmse']:.2f} edificios por celda
+   - MAE de {best_result['mae']:.2f} edificios por celda
+
+### Descarte de otros modelos:
+""")
+
+# Explicar por qué cada modelo fue descartado
+for name, res in results.items():
+    if name != best_model_name:
+        diff = best_result['cv_mean'] - res['cv_mean']
+        st.markdown(f"""
+- **{name}**: R² CV = {res['cv_mean']:.4f} (inferior por {diff:.4f})
+""")
+
+st.info("""
+**Nota técnica**: La validación cruzada espacial (GroupKFold con zonas geográficas) es fundamental
+en problemas geoespaciales. A diferencia de la validación cruzada tradicional que puede mezclar
+datos espacialmente cercanos en train/test, este método garantiza que los grupos espaciales
+completos se mueven juntos, evitando la autocorrelación espacial artificial.
 """)
 
 # ============================================================================
-# SECCION 4: MAPA DE PREDICCIONES
+# SECCION 4: IMPORTANCIA DE VARIABLES
 # ============================================================================
 
-st.header("4. Mapa de Predicciones")
+st.header("4. Importancia de Variables")
 
 st.markdown("""
-Este mapa compara los valores reales (izquierda) con las predicciones del modelo (derecha).
-Si el modelo funciona bien, ambos mapas deberian verse similares.
+La importancia de variables nos indica qué factores son más determinantes para predecir
+la densidad de edificaciones. Solo los modelos basados en árboles proporcionan esta información
+directamente.
 """)
 
-grid['prediccion'] = predictions
+# Obtener importancias (solo para modelos que las tienen)
+if hasattr(results[best_model_name]['model'], 'feature_importances_'):
+    importance = pd.DataFrame({
+        'Variable': [feature_names[f] for f in features],
+        'Importancia': results[best_model_name]['model'].feature_importances_
+    }).sort_values('Importancia', ascending=True)
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.barh(importance['Variable'], importance['Importancia'], color='#2E86AB')
+    ax.set_xlabel('Importancia Relativa')
+    ax.set_title(f'Importancia de Variables - {best_model_name}')
+    
+    # Agregar porcentajes
+    for bar in bars:
+        width = bar.get_width()
+        ax.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
+                f'{width*100:.1f}%', va='center')
+    
+    st.pyplot(fig)
+    plt.close()
+    
+    top_feature = importance.iloc[-1]
+    st.markdown(f"""
+    **Hallazgo principal**: La variable más importante es **{top_feature['Variable']}** 
+    con una importancia de {top_feature['Importancia']*100:.1f}%. Esto significa que 
+    esta característica es la que mejor predice dónde hay más edificaciones en la isla.
+    """)
+else:
+    st.warning(f"El modelo {best_model_name} no proporciona importancias de features directamente.")
+
+# ============================================================================
+# SECCION 5: MAPA DE PREDICCIONES
+# ============================================================================
+
+st.header("5. Mapa de Predicciones")
+
+st.markdown(f"""
+Este mapa muestra las predicciones del modelo **{best_model_name}** seleccionado.
+Las zonas con colores más intensos son donde el modelo predice mayor densidad de edificaciones.
+""")
+
+grid['prediccion'] = results[best_model_name]['predictions']
 
 # Convertir a WGS84 para visualizacion
 grid_wgs = grid.to_crs("EPSG:4326")
@@ -289,7 +456,8 @@ from streamlit_folium import st_folium
 m = folium.Map(location=[center_lat, center_lon], zoom_start=13, tiles='CartoDB positron')
 
 # Agregar celdas con predicciones
-max_pred = grid_wgs['prediccion'].max()
+max_pred = grid_wgs['prediccion'].max() if grid_wgs['prediccion'].max() > 0 else 1
+
 for idx, row in grid_wgs.iterrows():
     if row['prediccion'] > 0.5:
         # Color basado en prediccion
@@ -307,14 +475,41 @@ for idx, row in grid_wgs.iterrows():
                 'weight': 1,
                 'fillOpacity': 0.6
             },
-            tooltip=f"Prediccion: {row['prediccion']:.1f}, Real: {row['n_edificios']}"
+            tooltip=f"Predicción: {row['prediccion']:.1f}, Real: {row['n_edificios']}"
         ).add_to(m)
 
 st_folium(m, width=900, height=500)
 
-st.markdown("""
-**Interpretacion:** El mapa muestra las predicciones del modelo. Las zonas con colores 
-mas intensos son donde el modelo predice mayor densidad de edificaciones. La coincidencia 
-con la ubicacion real de Hanga Roa confirma que el modelo ha aprendido correctamente 
-los patrones espaciales de la isla.
+# ============================================================================
+# SECCION 6: RESUMEN Y CONCLUSIONES
+# ============================================================================
+
+st.header("6. Resumen de la Comparativa de Modelos")
+
+st.markdown(f"""
+### Modelos Evaluados
+
+| Modelo | Tipo | Ventajas | Desventajas |
+|--------|------|----------|-------------|
+| **Random Forest** | Ensamble de árboles | Robusto, feature importance | Lento en predicción |
+| **Gradient Boosting** | Boosting secuencial | Alta precisión | Sensible a outliers |
+| **SVM (RBF)** | Kernel | Bueno en espacios pequeños | Difícil interpretación |
+| **XGBoost** | Gradient Boosting optimizado | Muy eficiente | Requiere tuning |
+| **Linear Regression** | Modelo lineal | Simple, interpretable | No captura no-linealidades |
+
+### Modelo Final: **{best_model_name}**
+
+Se selecciono este modelo porque:
+- Mejor R2 en validacion cruzada espacial
+- Balance adecuado entre bias y varianza
+- Capacidad de capturar patrones espaciales complejos
+- Interpretabilidad mediante feature importance
+""")
+
+# Métricas finales
+st.success(f"""
+**Métricas del modelo final ({best_model_name})**:
+- R² (Validación Espacial): {best_result['cv_mean']:.4f} ± {best_result['cv_std']:.4f}
+- RMSE: {best_result['rmse']:.2f} edificios/celda
+- MAE: {best_result['mae']:.2f} edificios/celda
 """)

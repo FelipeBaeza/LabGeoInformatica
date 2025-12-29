@@ -5,12 +5,15 @@ Script para descargar datos geoespaciales de múltiples fuentes.
 
 Fuentes soportadas:
 - OSM (OpenStreetMap): Datos vectoriales
-- INE (Instituto Nacional de Estadísticas): Datos censales
+- INE (Instituto Nacional de Estadísticas): Datos censales (simulados)
 - Sentinel: Imágenes satelitales (requiere cuenta Copernicus)
+- DEM: Modelo de elevación digital
 
 Uso:
     python download_data.py --comuna "La Florida" --year 2024
     python download_data.py --comuna "Providencia" --year 2024 --sources osm
+
+Estructura de clase según requerimientos del laboratorio.
 """
 
 import argparse
@@ -18,9 +21,11 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 import geopandas as gpd
 import pandas as pd
+import numpy as np
 import osmnx as ox
 from tqdm import tqdm
 
@@ -30,233 +35,535 @@ DATA_RAW_DIR = BASE_DIR / "data" / "raw"
 DATA_PROCESSED_DIR = BASE_DIR / "data" / "processed"
 
 
-def setup_directories():
-    """Crear directorios necesarios si no existen."""
-    DATA_RAW_DIR.mkdir(parents=True, exist_ok=True)
-    DATA_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"✓ Directorios configurados en {DATA_RAW_DIR}")
-
-
-def download_osm_data(comuna: str, output_dir: Path) -> dict:
+class DataDownloader:
     """
-    Descargar datos de OpenStreetMap para una comuna.
+    Clase para descargar datos geoespaciales de múltiples fuentes.
     
-    Args:
-        comuna: Nombre de la comuna
-        output_dir: Directorio de salida
+    Implementa la estructura requerida por el laboratorio con métodos para:
+    - Descarga de límites administrativos
+    - Red vial desde OpenStreetMap
+    - Imágenes Sentinel-2 (placeholder para GEE)
+    - DEM (placeholder)
+    - Datos censales/socioeconómicos
     
-    Returns:
-        dict: Diccionario con los GeoDataFrames descargados
+    Attributes:
+        comuna: Nombre de la comuna a analizar
+        output_dir: Directorio de salida para los datos
     """
-    print(f"\nDescargando datos OSM para {comuna}...")
     
-    # Definir el lugar de búsqueda - intentar diferentes formatos
-    place_name = f"{comuna}, Chile"
+    def __init__(self, comuna_name: str, output_dir: str = '../data'):
+        """
+        Inicializar el descargador de datos.
+        
+        Args:
+            comuna_name: Nombre de la comuna
+            output_dir: Directorio de salida (default: '../data')
+        """
+        self.comuna = comuna_name
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(exist_ok=True)
+        
+        # Subdirectorios
+        self.raw_dir = self.output_dir / 'raw' / comuna_name.lower().replace(' ', '_')
+        self.processed_dir = self.output_dir / 'processed'
+        self.raw_dir.mkdir(parents=True, exist_ok=True)
+        self.processed_dir.mkdir(parents=True, exist_ok=True)
+        
+        self._downloaded_data = {}
+        print(f"✓ DataDownloader inicializado para {comuna_name}")
+        print(f"  Directorio de salida: {self.raw_dir}")
     
-    try:
-        # Obtener límite de la comuna
-        print("  → Obteniendo límite administrativo...")
-        boundary = ox.geocode_to_gdf(place_name)
-        boundary.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_boundary.geojson", driver="GeoJSON")
+    def download_administrative_boundaries(self) -> Optional[gpd.GeoDataFrame]:
+        """
+        Descarga límites administrativos desde OpenStreetMap/Nominatim.
         
-        # Obtener red de calles
-        print("  → Descargando red de calles...")
-        G = ox.graph_from_place(place_name, network_type='all')
-        nodes, edges = ox.graph_to_gdfs(G)
-        edges.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_streets.geojson", driver="GeoJSON")
+        En un caso real, se conectaría a IDE Chile WFS para obtener
+        límites oficiales.
         
-        # Obtener edificios
-        print("  → Descargando edificios...")
-        buildings = ox.features_from_place(place_name, tags={'building': True})
-        if not buildings.empty:
-            buildings = buildings.reset_index()
-            # Filtrar solo geometrías Polygon/MultiPolygon
-            buildings = buildings[buildings.geometry.type.isin(['Polygon', 'MultiPolygon'])]
-            buildings.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_buildings.geojson", driver="GeoJSON")
+        Returns:
+            GeoDataFrame con el límite de la comuna
+        """
+        print(f"\n→ Descargando límites administrativos para {self.comuna}...")
         
-        # Obtener amenidades (servicios)
-        print("  → Descargando amenidades...")
-        amenities = ox.features_from_place(place_name, tags={'amenity': True})
-        if not amenities.empty:
-            amenities = amenities.reset_index()
-            amenities.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_amenities.geojson", driver="GeoJSON")
+        place_name = f"{self.comuna}, Chile"
         
-        # Obtener áreas verdes
-        print("  → Descargando áreas verdes...")
-        green_areas = ox.features_from_place(place_name, tags={'leisure': ['park', 'garden', 'playground']})
-        if not green_areas.empty:
-            green_areas = green_areas.reset_index()
-            green_areas.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_green_areas.geojson", driver="GeoJSON")
+        try:
+            boundary = ox.geocode_to_gdf(place_name)
+            output_path = self.raw_dir / f"{self.comuna.lower().replace(' ', '_')}_boundary.geojson"
+            boundary.to_file(output_path, driver="GeoJSON")
+            
+            self._downloaded_data['boundary'] = boundary
+            print(f"  ✓ Límite guardado: {output_path}")
+            return boundary
+            
+        except Exception as e:
+            print(f"  ✗ Error al descargar límites: {e}")
+            return None
+    
+    def download_osm_network(self, network_type: str = 'all') -> Optional[gpd.GeoDataFrame]:
+        """
+        Descarga red vial desde OpenStreetMap usando OSMnx.
         
-        # Obtener transporte público
-        print("  → Descargando paradas de transporte...")
-        transport = ox.features_from_place(place_name, tags={'public_transport': True})
-        if not transport.empty:
-            transport = transport.reset_index()
-            transport.to_file(output_dir / f"{comuna.lower().replace(' ', '_')}_transport.geojson", driver="GeoJSON")
+        Args:
+            network_type: Tipo de red ('all', 'drive', 'walk', 'bike')
         
-        print(f"  ✓ Datos OSM descargados exitosamente")
+        Returns:
+            GeoDataFrame con las calles y GeoPackage con el grafo
+        """
+        print(f"\n→ Descargando red vial ({network_type})...")
+        
+        place_name = f"{self.comuna}, Chile"
+        
+        try:
+            # Descargar grafo de calles
+            G = ox.graph_from_place(place_name, network_type=network_type)
+            
+            # Guardar como GeoPackage
+            output_gpkg = self.raw_dir / 'red_vial.gpkg'
+            ox.save_graph_geopackage(G, filepath=output_gpkg)
+            
+            # Convertir a GeoDataFrame
+            nodes, edges = ox.graph_to_gdfs(G)
+            output_geojson = self.raw_dir / f"{self.comuna.lower().replace(' ', '_')}_streets.geojson"
+            edges.to_file(output_geojson, driver="GeoJSON")
+            
+            # Guardar grafo en formato GraphML
+            output_graphml = self.raw_dir / 'network_graph.graphml'
+            ox.save_graphml(G, filepath=output_graphml)
+            
+            self._downloaded_data['streets'] = edges
+            self._downloaded_data['network_graph'] = G
+            
+            print(f"  ✓ Red vial guardada: {len(edges)} segmentos")
+            print(f"    - GeoPackage: {output_gpkg}")
+            print(f"    - GraphML: {output_graphml}")
+            return edges
+            
+        except Exception as e:
+            print(f"  ✗ Error al descargar red vial: {e}")
+            return None
+    
+    def download_sentinel2(self, start_date: str, end_date: str, 
+                           cloud_cover_max: int = 20) -> Dict[str, Any]:
+        """
+        Descarga imágenes Sentinel-2 desde Google Earth Engine.
+        
+        Nota: Requiere autenticación en GEE. Esta implementación es
+        un placeholder que crea instrucciones para descarga manual.
+        
+        Args:
+            start_date: Fecha de inicio (YYYY-MM-DD)
+            end_date: Fecha de fin (YYYY-MM-DD)
+            cloud_cover_max: Máximo porcentaje de nubes
+        
+        Returns:
+            Diccionario con información de descarga
+        """
+        print(f"\n→ Preparando descarga Sentinel-2 ({start_date} a {end_date})...")
+        
+        # Crear archivo de instrucciones y código GEE
+        gee_code = f'''
+// ========================================
+// Código para Google Earth Engine
+// Copiar y pegar en https://code.earthengine.google.com/
+// ========================================
+
+// Definir área de interés
+var comuna = ee.FeatureCollection("FAO/GAUL/2015/level2")
+    .filter(ee.Filter.eq('ADM2_NAME', '{self.comuna}'));
+
+// Alternativamente, definir manualmente el bounding box
+// var geometry = ee.Geometry.Rectangle([-109.5, -27.3, -109.1, -27.0]);
+
+// Colección Sentinel-2 Surface Reflectance
+var s2 = ee.ImageCollection('COPERNICUS/S2_SR')
+    .filterBounds(comuna)
+    .filterDate('{start_date}', '{end_date}')
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', {cloud_cover_max}));
+
+print('Imágenes disponibles:', s2.size());
+
+// Crear mosaico (mediana para reducir nubes)
+var mosaic = s2.median().clip(comuna);
+
+// Calcular NDVI
+var ndvi = mosaic.normalizedDifference(['B8', 'B4']).rename('NDVI');
+
+// Calcular NDBI (Índice de Área Construida)
+var ndbi = mosaic.normalizedDifference(['B11', 'B8']).rename('NDBI');
+
+// Visualizar
+Map.centerObject(comuna, 12);
+Map.addLayer(mosaic, {{bands: ['B4', 'B3', 'B2'], min: 0, max: 3000}}, 'RGB');
+Map.addLayer(ndvi, {{min: -0.5, max: 0.8, palette: ['red', 'yellow', 'green']}}, 'NDVI');
+
+// Exportar NDVI
+Export.image.toDrive({{
+    image: ndvi,
+    description: '{self.comuna.replace(" ", "_")}_NDVI',
+    scale: 10,
+    region: comuna,
+    maxPixels: 1e13
+}});
+
+// Exportar NDBI
+Export.image.toDrive({{
+    image: ndbi,
+    description: '{self.comuna.replace(" ", "_")}_NDBI', 
+    scale: 10,
+    region: comuna,
+    maxPixels: 1e13
+}});
+'''
+        
+        # Guardar código GEE
+        gee_path = self.raw_dir / 'sentinel2_gee_code.js'
+        with open(gee_path, 'w', encoding='utf-8') as f:
+            f.write(gee_code)
+        
+        # Crear README con instrucciones
+        readme_path = self.raw_dir / 'sentinel2_README.md'
+        with open(readme_path, 'w', encoding='utf-8') as f:
+            f.write(f"""# Descarga de Imágenes Sentinel-2 para {self.comuna}
+
+## Opción 1: Google Earth Engine (Recomendado)
+
+1. Ir a [Google Earth Engine](https://code.earthengine.google.com/)
+2. Copiar el código de `sentinel2_gee_code.js`
+3. Ejecutar y exportar a Google Drive
+4. Descargar los archivos GeoTIFF
+
+## Opción 2: Copernicus Open Access Hub
+
+1. Ir a [Copernicus Hub](https://scihub.copernicus.eu/)
+2. Buscar: {self.comuna}, Chile
+3. Fechas: {start_date} a {end_date}
+4. Producto: S2A_MSIL2A (Level-2A)
+5. Nubes: < {cloud_cover_max}%
+
+## Índices Calculables
+
+| Índice | Fórmula | Uso |
+|--------|---------|-----|
+| NDVI | (B8-B4)/(B8+B4) | Vegetación |
+| NDBI | (B11-B8)/(B11+B8) | Áreas construidas |
+| NDWI | (B3-B8)/(B3+B8) | Agua |
+
+Generado: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+""")
+        
+        print(f"  ✓ Código GEE guardado: {gee_path}")
+        print(f"  ✓ Instrucciones: {readme_path}")
         
         return {
-            'boundary': boundary,
-            'streets': edges,
-            'buildings': buildings if not buildings.empty else None,
-            'amenities': amenities if not amenities.empty else None,
-            'green_areas': green_areas if not green_areas.empty else None,
-            'transport': transport if not transport.empty else None
+            'gee_code_path': str(gee_path),
+            'readme_path': str(readme_path),
+            'start_date': start_date,
+            'end_date': end_date
         }
+    
+    def download_dem(self, source: str = 'ALOS') -> Dict[str, Any]:
+        """
+        Descarga DEM (Digital Elevation Model) desde ALOS PALSAR o SRTM.
         
-    except Exception as e:
-        print(f"  ✗ Error al descargar datos OSM: {e}")
-        return {}
+        Args:
+            source: Fuente del DEM ('ALOS' o 'SRTM')
+        
+        Returns:
+            Diccionario con información de descarga
+        """
+        print(f"\n→ Preparando descarga DEM ({source})...")
+        
+        dem_code = f'''
+// ========================================
+// Código GEE para descargar DEM
+// ========================================
 
+var comuna = ee.FeatureCollection("FAO/GAUL/2015/level2")
+    .filter(ee.Filter.eq('ADM2_NAME', '{self.comuna}'));
 
-def download_ine_data(comuna: str, year: int, output_dir: Path) -> dict:
-    """
-    Descargar datos del INE (Instituto Nacional de Estadísticas).
-    
-    Nota: Esta función simula la descarga ya que los datos del INE
-    requieren acceso a su portal o API específica.
-    
-    Args:
-        comuna: Nombre de la comuna
-        year: Año de los datos
-        output_dir: Directorio de salida
-    
-    Returns:
-        dict: Diccionario con los datos descargados
-    """
-    print(f"\n Descargando datos INE para {comuna} ({year})...")
-    
-    # Nota: En un caso real, aquí se conectaría a la API del INE
-    # o se descargarían los datos desde su portal
-    print("  ⚠ Los datos del INE deben descargarse manualmente desde:")
-    print("    https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda")
-    print("    https://geoine-ine-chile.opendata.arcgis.com/")
-    
-    # Crear archivo de placeholder con instrucciones
-    readme_path = output_dir / f"{comuna.lower().replace(' ', '_')}_ine_README.txt"
-    with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write(f"""Datos INE para {comuna} - {year}
-{'='*50}
+// ALOS DEM (30m resolución)
+var alos = ee.Image('JAXA/ALOS/AW3D30/V2_2')
+    .select('AVE_DSM')
+    .clip(comuna);
 
-Para descargar datos del INE:
+// SRTM DEM (30m resolución)
+var srtm = ee.Image('USGS/SRTMGL1_003')
+    .select('elevation')
+    .clip(comuna);
 
-1. Censo 2017:
-   - Portal: https://geoine-ine-chile.opendata.arcgis.com/
-   - Buscar: Manzanas Censales, Zonas Censales
-   
-2. Proyecciones de Población:
-   - Portal: https://www.ine.cl/estadisticas/sociales/demografia-y-vitales/proyecciones-de-poblacion
-   
-3. Variables disponibles:
-   - Población total
-   - Viviendas
-   - Hogares
-   - Nivel educacional
-   - Actividad económica
+// Calcular pendiente
+var slope = ee.Terrain.slope(alos);
 
-Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+// Visualizar
+Map.addLayer(alos, {{min: 0, max: 500, palette: ['green', 'yellow', 'red']}}, 'ALOS DEM');
+Map.addLayer(slope, {{min: 0, max: 45, palette: ['green', 'yellow', 'red']}}, 'Slope');
+
+// Exportar DEM
+Export.image.toDrive({{
+    image: alos,
+    description: '{self.comuna.replace(" ", "_")}_DEM',
+    scale: 30,
+    region: comuna,
+    maxPixels: 1e13
+}});
+
+// Exportar Pendiente
+Export.image.toDrive({{
+    image: slope,
+    description: '{self.comuna.replace(" ", "_")}_SLOPE',
+    scale: 30,
+    region: comuna,
+    maxPixels: 1e13
+}});
+'''
+        
+        dem_code_path = self.raw_dir / 'dem_gee_code.js'
+        with open(dem_code_path, 'w', encoding='utf-8') as f:
+            f.write(dem_code)
+        
+        print(f"  ✓ Código GEE para DEM guardado: {dem_code_path}")
+        
+        return {
+            'gee_code_path': str(dem_code_path),
+            'source': source
+        }
+    
+    def download_census_data(self, year: int = 2017) -> Optional[gpd.GeoDataFrame]:
+        """
+        Descarga o simula datos censales/socioeconómicos.
+        
+        En un caso real, se conectaría a la API del INE o se descargarían
+        los datos desde GeoINE. Esta implementación crea datos simulados
+        basados en la estructura de edificios.
+        
+        Args:
+            year: Año del censo (default: 2017)
+        
+        Returns:
+            GeoDataFrame con datos socioeconómicos por manzana/zona
+        """
+        print(f"\n→ Generando datos socioeconómicos (basados en Censo {year})...")
+        
+        # Primero necesitamos el límite
+        if 'boundary' not in self._downloaded_data:
+            self.download_administrative_boundaries()
+        
+        if 'boundary' not in self._downloaded_data:
+            print("  ✗ No se pudo obtener el límite de la comuna")
+            return None
+        
+        boundary = self._downloaded_data['boundary']
+        
+        # Crear grilla de "manzanas censales" simuladas
+        from shapely.geometry import box as shapely_box
+        
+        bounds = boundary.total_bounds  # [minx, miny, maxx, maxy]
+        cell_size = 0.005  # ~500m en grados
+        
+        cells = []
+        x = bounds[0]
+        while x < bounds[2]:
+            y = bounds[1]
+            while y < bounds[3]:
+                cell = shapely_box(x, y, x + cell_size, y + cell_size)
+                if cell.intersects(boundary.unary_union):
+                    cells.append(cell)
+                y += cell_size
+            x += cell_size
+        
+        # Crear GeoDataFrame con datos simulados
+        np.random.seed(42)  # Para reproducibilidad
+        n_cells = len(cells)
+        
+        census_data = gpd.GeoDataFrame({
+            'geometry': cells,
+            'manzana_id': [f'MZ_{i:04d}' for i in range(n_cells)],
+            # Datos demográficos simulados
+            'poblacion': np.random.poisson(150, n_cells),
+            'viviendas': np.random.poisson(50, n_cells),
+            'hogares': np.random.poisson(45, n_cells),
+            # Datos socioeconómicos simulados
+            'ingreso_promedio': np.random.normal(500000, 150000, n_cells).clip(200000, 2000000).astype(int),
+            'escolaridad_promedio': np.random.normal(12, 3, n_cells).clip(4, 18).round(1),
+            'tasa_desempleo': np.random.beta(2, 10, n_cells).round(3),
+            # Infraestructura
+            'acceso_agua': np.random.beta(9, 1, n_cells).round(2),
+            'acceso_electricidad': np.random.beta(9.5, 0.5, n_cells).round(2),
+            'acceso_internet': np.random.beta(7, 3, n_cells).round(2),
+        }, crs="EPSG:4326")
+        
+        # Filtrar solo celdas dentro del límite
+        census_data = census_data[census_data.intersects(boundary.unary_union)].reset_index(drop=True)
+        
+        output_path = self.raw_dir / f"{self.comuna.lower().replace(' ', '_')}_censo_{year}.geojson"
+        census_data.to_file(output_path, driver="GeoJSON")
+        
+        self._downloaded_data['census'] = census_data
+        
+        print(f"  ✓ Datos censales simulados: {len(census_data)} manzanas")
+        print(f"    Guardado en: {output_path}")
+        
+        # Crear README explicativo
+        readme_path = self.raw_dir / 'censo_README.md'
+        with open(readme_path, 'w', encoding='utf-8') as f:
+            f.write(f"""# Datos Censales para {self.comuna}
+
+## Fuente Original
+Los datos reales del Censo deben descargarse desde:
+- [GeoINE](https://geoine-ine-chile.opendata.arcgis.com/)
+- [Portal INE](https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda)
+
+## Datos Simulados
+Este archivo contiene datos **simulados** para propósitos de demostración.
+Las variables incluyen:
+
+| Variable | Descripción | Rango |
+|----------|-------------|-------|
+| poblacion | Población total | Poisson(150) |
+| viviendas | Número de viviendas | Poisson(50) |
+| hogares | Número de hogares | Poisson(45) |
+| ingreso_promedio | Ingreso promedio (CLP) | 200k-2M |
+| escolaridad_promedio | Años de escolaridad | 4-18 |
+| tasa_desempleo | Tasa de desempleo | 0-1 |
+| acceso_agua | Proporción con agua potable | 0-1 |
+| acceso_electricidad | Proporción con electricidad | 0-1 |
+| acceso_internet | Proporción con internet | 0-1 |
+
+**Nota**: Para análisis real, reemplace estos datos con los del Censo 2017.
+
+Generado: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 """)
+        
+        return census_data
     
-    print(f"  ✓ Instrucciones guardadas en {readme_path}")
-    return {}
-
-
-def download_sentinel_data(comuna: str, year: int, output_dir: Path) -> dict:
-    """
-    Descargar imágenes Sentinel.
+    def download_buildings(self) -> Optional[gpd.GeoDataFrame]:
+        """Descarga edificios desde OpenStreetMap."""
+        print(f"\n→ Descargando edificios...")
+        
+        place_name = f"{self.comuna}, Chile"
+        
+        try:
+            buildings = ox.features_from_place(place_name, tags={'building': True})
+            if not buildings.empty:
+                buildings = buildings.reset_index()
+                buildings = buildings[buildings.geometry.type.isin(['Polygon', 'MultiPolygon'])]
+                
+                output_path = self.raw_dir / f"{self.comuna.lower().replace(' ', '_')}_buildings.geojson"
+                buildings.to_file(output_path, driver="GeoJSON")
+                
+                self._downloaded_data['buildings'] = buildings
+                print(f"  ✓ Edificios descargados: {len(buildings)}")
+                return buildings
+        except Exception as e:
+            print(f"  ✗ Error: {e}")
+        return None
     
-    Nota: Requiere cuenta en Copernicus Open Access Hub.
+    def download_amenities(self) -> Optional[gpd.GeoDataFrame]:
+        """Descarga amenidades desde OpenStreetMap."""
+        print(f"\n→ Descargando amenidades...")
+        
+        place_name = f"{self.comuna}, Chile"
+        
+        try:
+            amenities = ox.features_from_place(place_name, tags={'amenity': True})
+            if not amenities.empty:
+                amenities = amenities.reset_index()
+                
+                output_path = self.raw_dir / f"{self.comuna.lower().replace(' ', '_')}_amenities.geojson"
+                amenities.to_file(output_path, driver="GeoJSON")
+                
+                self._downloaded_data['amenities'] = amenities
+                print(f"  ✓ Amenidades descargadas: {len(amenities)}")
+                return amenities
+        except Exception as e:
+            print(f"  ✗ Error: {e}")
+        return None
     
-    Args:
-        comuna: Nombre de la comuna
-        year: Año de las imágenes
-        output_dir: Directorio de salida
+    def download_all(self, start_date: str = None, end_date: str = None) -> Dict[str, Any]:
+        """
+        Descarga todos los datos disponibles.
+        
+        Args:
+            start_date: Fecha inicio para imágenes satelitales
+            end_date: Fecha fin para imágenes satelitales
+        
+        Returns:
+            Diccionario con todos los datos descargados
+        """
+        print("\n" + "="*60)
+        print(f"DESCARGA COMPLETA DE DATOS: {self.comuna}")
+        print("="*60)
+        
+        # Datos vectoriales
+        self.download_administrative_boundaries()
+        self.download_osm_network()
+        self.download_buildings()
+        self.download_amenities()
+        
+        # Datos censales
+        self.download_census_data()
+        
+        # Imágenes satelitales (instrucciones)
+        if start_date and end_date:
+            self.download_sentinel2(start_date, end_date)
+        else:
+            self.download_sentinel2('2024-01-01', '2024-12-31')
+        
+        # DEM
+        self.download_dem()
+        
+        # Generar reporte
+        self._generate_summary_report()
+        
+        print("\n" + "="*60)
+        print("DESCARGA COMPLETADA")
+        print("="*60)
+        print(f"Datos guardados en: {self.raw_dir}")
+        
+        return self._downloaded_data
     
-    Returns:
-        dict: Diccionario con los datos descargados
-    """
-    print(f"\n Preparando descarga Sentinel para {comuna} ({year})...")
-    
-    print("  ⚠ Las imágenes Sentinel requieren:")
-    print("    1. Cuenta en Copernicus: https://scihub.copernicus.eu/dhus/#/self-registration")
-    print("    2. O usar Google Earth Engine: https://earthengine.google.com/")
-    
-    # Crear archivo de placeholder con instrucciones
-    readme_path = output_dir / f"{comuna.lower().replace(' ', '_')}_sentinel_README.txt"
-    with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write(f"""Imágenes Sentinel para {comuna} - {year}
-{'='*50}
-
-Opciones para obtener imágenes satelitales:
-
-1. Copernicus Open Access Hub (Sentinel-2):
-   - URL: https://scihub.copernicus.eu/
-   - Producto: S2A_MSIL2A (Level-2A, atmosféricamente corregido)
-   - Bandas útiles: B2, B3, B4 (RGB), B8 (NIR)
-   
-2. Google Earth Engine:
-   - Colección: COPERNICUS/S2_SR
-   - Más fácil de procesar
-   
-3. Sentinel Hub:
-   - URL: https://www.sentinel-hub.com/
-   - API REST disponible
-
-Índices calculables:
-   - NDVI: (B8 - B4) / (B8 + B4) - Vegetación
-   - NDBI: (B11 - B8) / (B11 + B8) - Áreas construidas
-   - NDWI: (B3 - B8) / (B3 + B8) - Agua
-
-Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-""")
-    
-    print(f"  ✓ Instrucciones guardadas en {readme_path}")
-    return {}
-
-
-def create_summary_report(comuna: str, year: int, data: dict, output_dir: Path):
-    """Crear reporte resumen de los datos descargados."""
-    print("\n Generando reporte de datos...")
-    
-    report_path = output_dir / f"{comuna.lower().replace(' ', '_')}_data_summary.txt"
-    
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write(f"""
+    def _generate_summary_report(self):
+        """Genera reporte resumen de los datos descargados."""
+        report_path = self.raw_dir / 'data_summary.txt'
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write(f"""
 {'='*60}
 REPORTE DE DESCARGA DE DATOS GEOESPACIALES
 {'='*60}
 
-Comuna: {comuna}
-Año: {year}
+Comuna: {self.comuna}
 Fecha de descarga: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 DATOS DESCARGADOS
 {'-'*60}
 """)
-        
-        for source, datasets in data.items():
-            f.write(f"\n[{source.upper()}]\n")
-            if datasets:
-                for name, gdf in datasets.items():
-                    if gdf is not None and hasattr(gdf, 'shape'):
-                        f.write(f"  - {name}: {gdf.shape[0]} registros\n")
-            else:
-                f.write("  - Sin datos descargados\n")
-        
-        f.write(f"""
+            for name, data in self._downloaded_data.items():
+                if hasattr(data, 'shape'):
+                    f.write(f"  - {name}: {data.shape[0]} registros\n")
+                else:
+                    f.write(f"  - {name}: disponible\n")
+            
+            f.write(f"""
 {'-'*60}
 PRÓXIMOS PASOS
 {'-'*60}
-1. Cargar datos en PostGIS usando el script load_to_postgis.py
-2. Validar calidad de datos
-3. Comenzar análisis exploratorio
+1. Cargar datos en PostGIS: python load_to_postgis.py
+2. Ejecutar notebooks de análisis
+3. Iniciar aplicación web
 
 {'='*60}
 """)
-    
-    print(f"  ✓ Reporte guardado en {report_path}")
+        
+        print(f"\n✓ Reporte guardado: {report_path}")
+
+
+def setup_directories():
+    """Crear directorios necesarios si no existen."""
+    DATA_RAW_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    print(f"✓ Directorios configurados en {DATA_RAW_DIR}")
 
 
 def main():
@@ -267,8 +574,8 @@ def main():
         epilog="""
 Ejemplos:
   python download_data.py --comuna "La Florida" --year 2024
-  python download_data.py --comuna "Providencia" --year 2024 --sources osm
-  python download_data.py --comuna "Santiago" --year 2024 --sources osm ine
+  python download_data.py --comuna "Isla de Pascua" --sources osm
+  python download_data.py --comuna "Santiago" --year 2024 --sources all
         """
     )
     
@@ -289,9 +596,23 @@ Ejemplos:
     parser.add_argument(
         '--sources', '-s',
         nargs='+',
-        choices=['osm', 'ine', 'sentinel', 'all'],
+        choices=['osm', 'census', 'sentinel', 'dem', 'all'],
         default=['all'],
         help='Fuentes de datos a descargar (default: all)'
+    )
+    
+    parser.add_argument(
+        '--start-date',
+        type=str,
+        default='2024-01-01',
+        help='Fecha inicio para imágenes satelitales (YYYY-MM-DD)'
+    )
+    
+    parser.add_argument(
+        '--end-date',
+        type=str,
+        default='2024-12-31',
+        help='Fecha fin para imágenes satelitales (YYYY-MM-DD)'
     )
     
     args = parser.parse_args()
@@ -300,6 +621,7 @@ Ejemplos:
     print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║     DESCARGA DE DATOS GEOESPACIALES - GEOINFORMÁTICA        ║
+║          Usando clase DataDownloader                         ║
 ╚══════════════════════════════════════════════════════════════╝
     """)
     
@@ -307,41 +629,31 @@ Ejemplos:
     print(f"Año: {args.year}")
     print(f"Fuentes: {', '.join(args.sources)}")
     
-    # Configurar directorios
-    setup_directories()
+    # Crear instancia del descargador
+    downloader = DataDownloader(args.comuna, str(DATA_RAW_DIR.parent))
     
-    # Crear subdirectorio para la comuna
-    comuna_dir = DATA_RAW_DIR / args.comuna.lower().replace(' ', '_')
-    comuna_dir.mkdir(exist_ok=True)
-    
-    # Determinar qué fuentes descargar
+    # Determinar qué descargar
     sources = args.sources
     if 'all' in sources:
-        sources = ['osm', 'ine', 'sentinel']
+        downloader.download_all(args.start_date, args.end_date)
+    else:
+        if 'osm' in sources:
+            downloader.download_administrative_boundaries()
+            downloader.download_osm_network()
+            downloader.download_buildings()
+            downloader.download_amenities()
+        
+        if 'census' in sources:
+            downloader.download_census_data(args.year)
+        
+        if 'sentinel' in sources:
+            downloader.download_sentinel2(args.start_date, args.end_date)
+        
+        if 'dem' in sources:
+            downloader.download_dem()
     
-    # Almacenar datos descargados
-    all_data = {}
-    
-    # Descargar de cada fuente
-    if 'osm' in sources:
-        all_data['osm'] = download_osm_data(args.comuna, comuna_dir)
-    
-    if 'ine' in sources:
-        all_data['ine'] = download_ine_data(args.comuna, args.year, comuna_dir)
-    
-    if 'sentinel' in sources:
-        all_data['sentinel'] = download_sentinel_data(args.comuna, args.year, comuna_dir)
-    
-    # Generar reporte
-    create_summary_report(args.comuna, args.year, all_data, comuna_dir)
-    
-    print("""
-╔══════════════════════════════════════════════════════════════╗
-║                   DESCARGA COMPLETADA                        ║
-╚══════════════════════════════════════════════════════════════╝
-    """)
-    print(f"Datos guardados en: {comuna_dir}")
-    print("\nPróximo paso: python scripts/load_to_postgis.py")
+    print("\n✓ Proceso completado!")
+    print(f"Datos guardados en: {downloader.raw_dir}")
 
 
 if __name__ == "__main__":
