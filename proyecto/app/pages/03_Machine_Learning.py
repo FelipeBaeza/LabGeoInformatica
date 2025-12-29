@@ -17,7 +17,7 @@ from shapely.geometry import box
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
-from sklearn.model_selection import cross_val_score, GroupKFold
+from sklearn.model_selection import cross_val_score, KFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import os
@@ -158,7 +158,7 @@ def load_and_prepare_data(cell_size=300):
     grid['x_norm'] = (grid['centroid_x'] - grid['centroid_x'].min()) / (grid['centroid_x'].max() - grid['centroid_x'].min())
     grid['y_norm'] = (grid['centroid_y'] - grid['centroid_y'].min()) / (grid['centroid_y'].max() - grid['centroid_y'].min())
     
-    # Crear zona_id para validación espacial (GroupKFold)
+    # Crear zona_id para validacion espacial (opcional)
     grid['zona_id'] = pd.cut(grid['x_norm'] + grid['y_norm'], bins=5, labels=False)
     
     return grid
@@ -245,30 +245,36 @@ if XGBOOST_AVAILABLE:
     models['XGBoost'] = xgb.XGBRegressor(n_estimators=100, max_depth=6, 
                                           learning_rate=0.1, random_state=42, verbosity=0)
 
-# Entrenamiento y evaluación con validación cruzada espacial
+# Entrenamiento y evaluacion con validacion cruzada
 results = {}
-gkf = GroupKFold(n_splits=5)
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-with st.spinner("Entrenando y comparando modelos con validación espacial..."):
+# Tambien dividir para evaluacion final
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+
+with st.spinner("Entrenando y comparando modelos..."):
     progress_bar = st.progress(0)
     
     for i, (name, model) in enumerate(models.items()):
-        # Validación cruzada espacial (GroupKFold evita data leakage espacial)
-        cv_scores = cross_val_score(model, X_scaled, y, cv=gkf, groups=groups, scoring='r2')
+        # Validacion cruzada con KFold (shuffle=True para mezclar datos)
+        cv_scores = cross_val_score(model, X_scaled, y, cv=kf, scoring='r2')
         
-        # Entrenar modelo completo para predicciones
-        model.fit(X_scaled, y)
+        # Entrenar modelo en train y evaluar en test
+        model.fit(X_train, y_train)
+        y_pred_test = model.predict(X_test)
+        
+        # Tambien predecir en todo el dataset para el mapa
         predictions = model.predict(X_scaled)
         
-        rmse = np.sqrt(mean_squared_error(y, predictions))
-        mae = mean_absolute_error(y, predictions)
-        r2 = r2_score(y, predictions)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
+        mae = mean_absolute_error(y_test, y_pred_test)
+        r2_test = r2_score(y_test, y_pred_test)
         
         results[name] = {
             'model': model,
             'cv_mean': cv_scores.mean(),
             'cv_std': cv_scores.std(),
-            'r2': r2,
+            'r2_test': r2_test,
             'rmse': rmse,
             'mae': mae,
             'predictions': predictions
@@ -281,21 +287,21 @@ progress_bar.empty()
 # Crear DataFrame de resultados
 results_df = pd.DataFrame({
     'Modelo': results.keys(),
-    'R² (CV Espacial)': [r['cv_mean'] for r in results.values()],
+    'R2 (CV)': [r['cv_mean'] for r in results.values()],
     'Desv. Std': [r['cv_std'] for r in results.values()],
-    'R² (Train)': [r['r2'] for r in results.values()],
+    'R2 (Test)': [r['r2_test'] for r in results.values()],
     'RMSE': [r['rmse'] for r in results.values()],
     'MAE': [r['mae'] for r in results.values()]
-}).sort_values('R² (CV Espacial)', ascending=False).reset_index(drop=True)
+}).sort_values('R2 (CV)', ascending=False).reset_index(drop=True)
 
 # Mostrar tabla de comparación
 st.subheader("Tabla Comparativa de Modelos")
-st.dataframe(results_df.style.highlight_max(subset=['R² (CV Espacial)', 'R² (Train)'], color='lightgreen')
+st.dataframe(results_df.style.highlight_max(subset=['R2 (CV)', 'R2 (Test)'], color='lightgreen')
              .highlight_min(subset=['RMSE', 'MAE'], color='lightgreen')
              .format({
-                 'R² (CV Espacial)': '{:.4f}',
+                 'R2 (CV)': '{:.4f}',
                  'Desv. Std': '±{:.4f}',
-                 'R² (Train)': '{:.4f}',
+                 'R2 (Test)': '{:.4f}',
                  'RMSE': '{:.2f}',
                  'MAE': '{:.2f}'
              }))
@@ -347,7 +353,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Mejor Modelo", best_model_name)
 with col2:
-    st.metric("R² (CV Espacial)", f"{best_result['cv_mean']:.4f}")
+    st.metric("R2 (CV)", f"{best_result['cv_mean']:.4f}")
 with col3:
     st.metric("RMSE", f"{best_result['rmse']:.2f}")
 
@@ -361,7 +367,7 @@ El modelo **{best_model_name}** fue seleccionado como el mejor modelo basándose
    - Las zonas geográficas se agrupan para garantizar que el modelo generalice bien a nuevas áreas
 
 2. **Mejor balance entre ajuste y generalización**:
-   - R² de entrenamiento ({best_result['r2']:.4f}) vs R² CV ({best_result['cv_mean']:.4f})
+   - R² de entrenamiento ({best_result['r2_test']:.4f}) vs R² CV ({best_result['cv_mean']:.4f})
    - Diferencia pequeña indica que no hay overfitting significativo
 
 3. **Error de predicción controlado**:
